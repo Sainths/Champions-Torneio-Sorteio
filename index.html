@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Champions Bracket & Draw - Liga VGC</title>
+  <title>Champions Tournament - Bracket & Draw</title>
+  <!-- Vínculo essencial para o logo do Manifest (PWA Instalável) -->
   <link rel="manifest" href="manifest.json">
-
   <style>
     :root {
       --azul-arena: #0a2e5c;
@@ -44,7 +44,7 @@
       box-sizing: border-box; 
     }
 
-    /* Quando a tela principal abre, ela expande horizontalmente para caber as chaves */
+    /* Expansão horizontal da tela de chaves */
     #main-screen.container {
       max-width: 600px;
     }
@@ -120,14 +120,14 @@
 </head>
 <body>
 
-    <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS -->
+  <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS -->
   <div id="auth-screen" class="container">
-    <!-- ADICIONE ESTA LINHA ABAIXO PARA EXIBIR O NOVO LOGO -->
-    <img src="icone-sorteio.png" alt="Logo" class="app-logo" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 10px; background-color: var(--fundo-escuro); object-fit: cover; object-position: center;">
+    <!-- Imagem de Perfil do app associada ao Manifest -->
+    <img src="icone-sorteio.png" alt="Logo Tournament" style="width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 12px; background-color: var(--fundo-escuro); object-fit: cover; object-position: center;">
     
     <h1>Champions Tournament</h1>
-    <p style="color: #88c0d0; font-size: 0.8rem; margin-bottom: 20px;">Inscreva-se nas atividades da Liga de hoje</p>
-
+    <p style="color: #88c0d0; font-size: 0.8rem; margin-bottom: 20px;">Faça login e selecione a inscrição para o evento de hoje:</p>
+    
     <div class="input-group">
       <label>Nome do Treinador</label>
       <input type="text" id="nome" placeholder="Ex: Ash">
@@ -168,7 +168,7 @@
       <!-- Controles do Sorteio -->
       <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
         <label style="font-size: 0.7rem; color: #aebac7;">Item para Sorteio:</label>
-        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack SV6..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
+        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack, Ogrepon..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <button onclick="dispararSorteioBrinde()" style="background: var(--amarelo-campeao); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">🎰 Sortear Item</button>
           <button onclick="resetarDadosMaster('sorteio')" style="background: #4b5d6c; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Sorteio</button>
@@ -196,22 +196,27 @@
 
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
+  
 <script>
 // --- CONFIGURAÇÃO DA API DA LIGA ---
-const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbw8HE0e9kdPMIC2AXbKQlcUX9r5kTr72va577WfCiSsUnDeM0yDZxEq586yzfG1zVWe/exec"; // Substitua pelo link da implantação do novo script depois
+const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/library/d/1YtmfKOAJxM-HrlAeRitVfGU23_thM2fwSk6MUYywRKWUBQAlBHh9wYfv/2"; // Link oficial da sua implantação
 let loopMonitoramento = null;
 let informacoesJogadorLogado = null;
 
-// Executa ao inicializar a página para checar sessão ativa
+// Executa ao inicializar a página para checar se há login salvo
 window.onload = () => {
   const sessaoSalva = localStorage.getItem('SessionTournament');
   if (sessaoSalva) {
-    informacoesJogadorLogado = JSON.parse(sessaoSalva);
-    liberarAmbientePrincipal(informacoesJogadorLogado);
+    try {
+      informacoesJogadorLogado = JSON.parse(sessaoSalva);
+      liberarAmbientePrincipal(informacoesJogadorLogado);
+    } catch(e) {
+      localStorage.removeItem('SessionTournament');
+    }
   }
 };
 
-// Gerenciador de troca visual de abas (Chaveamento vs Urna de Sorteios)
+// Gerenciador de troca de abas (Chaveamento vs Urna de Sorteios)
 function trocarAbaVisual(idAbaAlvo) {
   const abas = document.querySelectorAll('.tab-content');
   const botoes = document.querySelectorAll('.tab-btn');
@@ -222,7 +227,7 @@ function trocarAbaVisual(idAbaAlvo) {
   const abaAtiva = document.getElementById(idAbaAlvo);
   if (abaAtiva) abaAtiva.classList.remove('hidden');
   
-  // Define qual botão de aba ganha destaque ativo
+  // Destaca o botão da aba selecionada
   if (idAbaAlvo === 'aba-chaveamento') {
     botoes[0].classList.add('active');
   } else {
@@ -230,7 +235,7 @@ function trocarAbaVisual(idAbaAlvo) {
   }
 }
 
-// 1. CONEXÃO E INSCRIÇÃO NAS LISTAS SEPARADAS
+// 1. LÓGICA DE DUPLA INSCRIÇÃO INDEPENDENTE
 async function registrarInscricao(tipoAtividade) {
   const nome = document.getElementById('nome').value.trim();
   const senha = document.getElementById('senha').value;
@@ -244,10 +249,13 @@ async function registrarInscricao(tipoAtividade) {
   if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
 
   try {
-    // Dispara requisição segura em formato text/plain para ignorar bloqueios de CORS
+    // CORREÇÃO DE CORS: Enviando como text/plain para desbloquear a rede
     const resposta = await fetch(URL_SISTEMA_CHAVAS, {
       method: 'POST',
-      body: JSON.stringify({ action: "registrarParticipacao", nome, senha, escopo: tipoAtividade })
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, escopo: tipoAtividade })
     });
     const dadosServidor = await resposta.json();
 
@@ -256,6 +264,7 @@ async function registrarInscricao(tipoAtividade) {
       localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
       
       if (statusElement) {
+        statusElement.style.color = "var(--azul-neon)";
         statusElement.innerText = tipoAtividade === 'torneio' 
           ? "Inscrição confirmada na árvore do Campeonato VGC!" 
           : "Inscrição efetuada na urna de Sorteios de Brindes!";
@@ -263,15 +272,23 @@ async function registrarInscricao(tipoAtividade) {
       
       setTimeout(() => liberarAmbientePrincipal(informacoesJogadorLogado), 1500);
     } else {
-      if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais de acesso.";
+      if (statusElement) {
+        statusElement.style.color = "var(--vermelho-liga)";
+        statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais de acesso.";
+      }
     }
   } catch (erro) {
     console.error(erro);
-    if (statusElement) statusElement.innerText = "Erro de rede. Verifique seu servidor ou implantação.";
+    if (statusElement) {
+      statusElement.style.color = "var(--vermelho-liga)";
+      statusElement.innerText = "Erro de conexão. Verifique o servidor ou a implantação.";
+    }
   }
 }
 
 function liberarAmbientePrincipal(dadosUsuario) {
+  if(!dadosUsuario || !dadosUsuario.nome) return;
+  
   const telaAuth = document.getElementById('auth-screen');
   const telaMain = document.getElementById('main-screen');
   const painelAdmin = document.getElementById('painel-admin');
@@ -281,14 +298,14 @@ function liberarAmbientePrincipal(dadosUsuario) {
   if (telaMain) telaMain.classList.remove('hidden');
   if (nomeDisplay) nomeDisplay.innerText = dadosUsuario.nome;
 
-  // Trava de segurança administrativa: Substitua pelo seu nick exato
+  // Trava de segurança administrativa da Liga (Sainths)
   if (dadosUsuario.nome.toLowerCase() === "sainths") {
     if (painelAdmin) painelAdmin.classList.remove('hidden');
   } else {
     if (painelAdmin) painelAdmin.classList.add('hidden');
   }
 
-  // Liga o monitoramento em tempo real a cada 10 segundos para ver os avanços das chaves
+  // Ativa a varredura automática a cada 10 segundos
   sincronizarDadosGeraisTorneio();
   if (loopMonitoramento) clearInterval(loopMonitoramento);
   loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 10000);
@@ -303,21 +320,22 @@ async function sincronizarDadosGeraisTorneio() {
     const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
     const payload = await resposta.json();
 
-    // Sincroniza a Urna de Prêmios dinamicamente na tela de todos
+    // Atualiza o painel da urna de prêmios na tela de todos
     if (displayBrinde) displayBrinde.innerText = payload.itemSorteio || "Aguardando novo brinde...";
     if (displayGanhador) displayGanhador.innerText = payload.ganhadorSorteio || "???";
 
-    // Desenha as fases do torneio se houver chaves geradas
     if (!payload.confrontos || payload.confrontos.length === 0) {
       if (containerArvore) containerArvore.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando o organizador fechar as inscrições e montar as chaves oficiais...</p>`;
       return;
     }
 
-    // Organiza os confrontos divididos em subcategorias (Preliminar, Oitavas, Quartas, Semi, Final)
+    // Separa os confrontos dinamicamente por fase (Preliminar, Oitavas, Quartas, Semi, Final)
     let agrupamentoFases = {};
     payload.confrontos.forEach(duelo => {
-      if (!agrupamentoFases[duelo.fase]) agrupamentoFases[duelo.fase] = [];
-      agrupamentoFases[duelo.fase].push(duelo);
+      if (duelo && duelo.fase) {
+        if (!agrupamentoFases[duelo.fase]) agrupamentoFases[duelo.fase] = [];
+        agrupamentoFases[duelo.fase].push(duelo);
+      }
     });
 
     let htmlGerado = "";
@@ -327,11 +345,11 @@ async function sincronizarDadosGeraisTorneio() {
           <div class="fase-header">${nomeFase}</div>`;
       
       agrupamentoFases[nomeFase].forEach(match => {
-        const isWinner1 = match.vencedor === match.j1;
-        const isWinner2 = match.vencedor === match.j2;
+        const isWinner1 = match.vencedor && match.vencedor.toString().toLowerCase() === match.j1.toString().toLowerCase();
+        const isWinner2 = match.vencedor && match.vencedor.toString().toLowerCase() === match.j2.toString().toLowerCase();
         
-        // Verifica se o jogador logado está participando deste card específico e a partida está ativa
-        const pertenceAoDuelo = informacoesJogadorLogado && (informacoesJogadorLogado.nome === match.j1 || informacoesJogadorLogado.nome === match.j2);
+        // Verifica se o competidor logado é dono de um dos nexos deste card e se não há resultado computado
+        const pertenceAoDuelo = informacoesJogadorLogado && (informacoesJogadorLogado.nome.toLowerCase() === match.j1.toLowerCase() || informacoesJogadorLogado.nome.toLowerCase() === match.j2.toLowerCase());
         const mostrarBotaoReport = pertenceAoDuelo && !match.vencedor && match.j2 !== "BYE";
 
         const botaoHTML = mostrarBotaoReport 
@@ -363,10 +381,14 @@ async function sincronizarDadosGeraisTorneio() {
   }
 }
 
-// 3. COMANDOS EXCLUSIVOS DO ORGANIZADOR SAINTHS
+// 3. COMANDOS EXCLUSIVOS DO ORGANIZADOR SAINTHS (CORRIGIDO COM CONTENT-TYPE TEXT/PLAIN)
 async function gerarChaveChampionship() {
   if (confirm("Deseja fechar as inscrições atuais e realizar o sorteio de chaves eliminatórias com BYEs automáticos?")) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "gerarChaveamentoMaster" }) });
+    await fetch(URL_SISTEMA_CHAVAS, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: "gerarChaveamentoMaster" }) 
+    });
     alert("Chaves geradas no servidor! Atualizando painéis...");
     sincronizarDadosGeraisTorneio();
   }
@@ -374,7 +396,11 @@ async function gerarChaveChampionship() {
 
 async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
   if (confirm(`Confirma que você venceu o Set MD3 desta rodada? O placar será atualizado para a liga inteira.`)) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "computarVitoriaDuelo", idDuelo, vencedor: nomeVencedor }) });
+    await fetch(URL_SISTEMA_CHAVAS, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: "computarVitoriaDuelo", idDuelo, vencedor: nomeVencedor }) 
+    });
     sincronizarDadosGeraisTorneio();
   }
 }
@@ -385,7 +411,11 @@ async function dispararSorteioBrinde() {
     alert("Digite o nome do prêmio ou brinde antes de rodar a roleta!");
     return;
   }
-  await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
+  await fetch(URL_SISTEMA_CHAVAS, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) 
+  });
   alert("Sorteio concluído! Ganhador publicado na tela dos treinadores.");
   document.getElementById('input-nome-premio').value = "";
   sincronizarDadosGeraisTorneio();
@@ -397,7 +427,11 @@ async function resetarDadosMaster(tipoReset) {
     : "⚠️ Limpar a urna de sorteios e remover todos os inscritos da lista de brindes?";
     
   if (confirm(mensagemConfirmacao)) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
+    await fetch(URL_SISTEMA_CHAVAS, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) 
+    });
     alert("Banco de dados resetado com sucesso!");
     sincronizarDadosGeraisTorneio();
   }
