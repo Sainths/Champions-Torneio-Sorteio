@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Champions Bracket & Draw - Liga VGC</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    :root {
+      --azul-arena: #0a2e5c;
+      --azul-neon: #00bfff;
+      --vermelho-liga: #ff1f1f;
+      --amarelo-campeao: #ffde00;
+      --fundo-escuro: #060e18;
+      --cinza-card: rgba(13, 27, 42, 0.9);
+    }
+
+    body {
+      background-color: var(--fundo-escuro);
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image: radial-gradient(circle, var(--azul-arena) 0%, var(--fundo-escuro) 85%);
+      min-height: 100vh;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    /* Caixa base do aplicativo */
+    .container { 
+      width: 95%; 
+      max-width: 450px; 
+      margin: 30px auto 20px auto; 
+      padding: 25px; 
+      border: 2px solid var(--azul-neon); 
+      border-radius: 15px; 
+      background: rgba(6, 14, 24, 0.95); 
+      box-shadow: 0 0 20px rgba(0, 191, 255, 0.4); 
+      text-align: center; 
+      box-sizing: border-box; 
+    }
+
+    /* Quando a tela principal abre, ela expande horizontalmente para caber as chaves */
+    #main-screen.container {
+      max-width: 600px;
+    }
+
+    h1 { 
+      color: var(--azul-neon); 
+      text-transform: uppercase; 
+      letter-spacing: 2px; 
+      text-shadow: 2px 2px #000, 0 0 10px rgba(0, 191, 255, 0.6); 
+      font-size: 1.4rem; 
+      margin-top: 5px;
+    } 
+
+    .tab-buttons { 
+      display: flex; 
+      background: var(--azul-arena);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 25px;
+      border: 1px solid var(--azul-neon);
+    } 
+
+    .tab-btn {
+      flex: 1; 
+      background: transparent; 
+      border: none; 
+      color: #aebac7; 
+      padding: 14px; 
+      font-weight: bold; 
+      font-size: 0.75rem;
+      text-transform: uppercase; 
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .tab-btn.active {
+      background: var(--azul-neon);
+      color: white;
+      text-shadow: 1px 1px 2px black;
+    }
+
+    .input-group { margin: 15px 0; text-align: left; } 
+    label { display: block; color: #e5e9f0; margin-bottom: 5px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; } 
+    input { width: 100%; padding: 12px; background: #132237; border: 1px solid var(--azul-arena); color: white; border-radius: 5px; box-sizing: border-box; transition: 0.3s; font-size: 0.9rem; } 
+    input:focus { border-color: var(--azul-neon); box-shadow: 0 0 8px rgba(0, 191, 255, 0.5); outline: none; } 
+    
+    .btn-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .btn-sub { padding: 14px; font-size: 0.75rem; font-weight: bold; color: white; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: 0.2s; text-shadow: 1px 1px 2px black; box-sizing: border-box; border: 1px solid var(--azul-neon); }
+    
+    button.btn-block { width: 100%; padding: 14px; background: linear-gradient(to right, #b31212, var(--vermelho-liga)); color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.3s; text-shadow: 1px 1px 2px black; border: 2px solid var(--amarelo-campeao); letter-spacing: 1px; } 
+    button.btn-block:hover { transform: scale(1.02); } 
+
+    /* Estrutura Visual da Árvore de Fases */
+    .fase-secao { text-align: left; margin-top: 25px; }
+    .fase-header { color: var(--amarelo-campeao); font-size: 0.85rem; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid rgba(0, 191, 255, 0.2); padding-bottom: 6px; margin-bottom: 10px; letter-spacing: 1px; }
+    
+    .card-duelo { background: var(--cinza-card); border: 1px solid var(--azul-arena); border-left: 4px solid var(--azul-neon); border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .duelistas-nomes { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+    .linha-treinador { display: flex; align-items: center; gap: 6px; }
+    .linha-treinador.winner { color: var(--amarelo-campeao); font-weight: bold; }
+    
+    .tag-bye { background: rgba(255, 222, 0, 0.1); color: var(--amarelo-campeao); border: 1px solid rgba(255, 222, 0, 0.3); font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
+    .btn-vitoria { background: #00cc88; border: none; color: white; padding: 6px 10px; font-size: 0.65rem; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+
+    /* Visual do Painel de Sorteios de Brindes */
+    .urna-box { background: rgba(2, 8, 19, 0.8); border: 2px dashed var(--azul-neon); padding: 20px; border-radius: 10px; margin-top: 15px; }
+    .premio-titulo { font-size: 1.1rem; color: var(--amarelo-campeao); font-weight: bold; text-shadow: 0 0 10px rgba(255, 222, 0, 0.3); margin-bottom: 5px; }
+    .ganhador-nome { font-size: 1.6rem; color: #fff; font-weight: 900; text-shadow: 0 0 15px var(--azul-neon); margin: 15px 0; letter-spacing: 1px; }
+
+    .hidden { display: none !important; }
+    .status-msg { margin-top: 15px; font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; }
+  </style>
+</head>
+<body>
+
+    <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS -->
+  <div id="auth-screen" class="container">
+    <!-- ADICIONE ESTA LINHA ABAIXO PARA EXIBIR O NOVO LOGO -->
+    <img src="icone-sorteio.png" alt="Logo" class="app-logo" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 10px; background-color: var(--fundo-escuro); object-fit: cover; object-position: center;">
+    
+    <h1>Champions Tournament</h1>
+    <p style="color: #88c0d0; font-size: 0.8rem; margin-bottom: 20px;">Inscreva-se nas atividades da Liga de hoje</p>
+
+    <div class="input-group">
+      <label>Nome do Treinador</label>
+      <input type="text" id="nome" placeholder="Ex: Ash">
+    </div>
+    
+    <div class="input-group">
+      <label>Senha de Acesso</label>
+      <input type="password" id="senha" placeholder="****">
+    </div>
+    
+    <div class="btn-duo">
+      <button onclick="registrarInscricao('torneio')" class="btn-sub" style="background: linear-gradient(to bottom, #00bfff, #0a2e5c);">⚔️ VGC Torneio</button>
+      <button onclick="registrarInscricao('sorteio')" class="btn-sub" style="background: linear-gradient(to bottom, var(--amarelo-campeao), #b89200); color: black; font-weight: bold;">🎁 Sorteio Itens</button>
+    </div>
+    
+    <p id="status-login" class="status-msg"></p>
+  </div>
+
+  <!-- TELA 2: DASHBOARD PRINCIPAL (BRACKETS & DRAWS) -->
+  <div id="main-screen" class="container hidden">
+    <p style="text-align: left; font-size: 0.85rem; margin-bottom: 15px; color: #88c0d0;">Treinador: <span id="user-display" style="color:var(--amarelo-campeao); font-weight: bold;">---</span></p>
+    
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="trocarAbaVisual('aba-chaveamento')">Chaves VGC</button>
+      <button class="tab-btn" onclick="trocarAbaVisual('aba-premios')">Urna de Prêmios</button>
+    </div>
+
+    <!-- PAINEL ADMINISTRATIVO DO ORGANIZADOR SAINTHS -->
+    <div id="painel-admin" class="hidden" style="margin-bottom: 25px; padding: 15px; border: 1px dashed var(--vermelho-liga); border-radius: 10px; background: rgba(255, 31, 31, 0.03); text-align: left;">
+      <h3 style="color: var(--vermelho-liga); font-size: 0.85rem; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">⚙️ PAINEL DO ORGANIZADOR</h3>
+      
+      <!-- Controles da Chave -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+        <button onclick="gerarChaveChampionship()" style="background: #00cc88; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Embaralhar & Iniciar</button>
+        <button onclick="resetarDadosMaster('torneio')" style="background: var(--vermelho-liga); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Torneio</button>
+      </div>
+
+      <!-- Controles do Sorteio -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+        <label style="font-size: 0.7rem; color: #aebac7;">Item para Sorteio:</label>
+        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack SV6..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button onclick="dispararSorteioBrinde()" style="background: var(--amarelo-campeao); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">🎰 Sortear Item</button>
+          <button onclick="resetarDadosMaster('sorteio')" style="background: #4b5d6c; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Sorteio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA INTERNA 1: CHAVEAMENTO MATA-MATA -->
+    <div id="aba-chaveamento" class="tab-content">
+      <div id="container-fases-arvore">
+        <p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando o organizador fechar as inscrições e montar as chaves oficiais...</p>
+      </div>
+    </div>
+
+    <!-- ABA INTERNA 2: URNA DE PRÊMIOS -->
+    <div id="aba-premios" class="tab-content hidden">
+      <div class="urna-box">
+        <div class="premio-titulo">🎁 BRINDE EM DISPUTA:</div>
+        <div id="display-brinde-alvo" style="color: var(--azul-neon); font-size: 1.1rem; font-weight: bold;">Nenhum item cadastrado</div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,191,255,0.1); margin: 15px 0;">
+        <div style="font-size: 0.75rem; color: #88c0d0; text-transform: uppercase; letter-spacing: 0.5px;">🏆 Ganhador do Sorteio 🏆</div>
+        <div id="display-ganhador-sorteio" class="ganhador-nome">???</div>
+      </div>
+    </div>
+
+    <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
+  </div>
+<script>
+// --- CONFIGURAÇÃO DA API DA LIGA ---
+const URL_SISTEMA_CHAVAS = "https://google.com"; // Substitua pelo link da implantação do novo script depois
+let loopMonitoramento = null;
+let informacoesJogadorLogado = null;
+
+// Executa ao inicializar a página para checar sessão ativa
+window.onload = () => {
+  const sessaoSalva = localStorage.getItem('SessionTournament');
+  if (sessaoSalva) {
+    informacoesJogadorLogado = JSON.parse(sessaoSalva);
+    liberarAmbientePrincipal(informacoesJogadorLogado);
+  }
+};
+
+// Gerenciador de troca visual de abas (Chaveamento vs Urna de Sorteios)
+function trocarAbaVisual(idAbaAlvo) {
+  const abas = document.querySelectorAll('.tab-content');
+  const botoes = document.querySelectorAll('.tab-btn');
+  
+  abas.forEach(aba => aba.classList.add('hidden'));
+  botoes.forEach(btn => btn.classList.remove('active'));
+  
+  const abaAtiva = document.getElementById(idAbaAlvo);
+  if (abaAtiva) abaAtiva.classList.remove('hidden');
+  
+  // Define qual botão de aba ganha destaque ativo
+  if (idAbaAlvo === 'aba-chaveamento') {
+    botoes[0].classList.add('active');
+  } else {
+    botoes[1].classList.add('active');
+  }
+}
+
+// 1. CONEXÃO E INSCRIÇÃO NAS LISTAS SEPARADAS
+async function registrarInscricao(tipoAtividade) {
+  const nome = document.getElementById('nome').value.trim();
+  const senha = document.getElementById('senha').value;
+  const statusElement = document.getElementById('status-login');
+
+  if (!nome || !senha) {
+    alert("Preencha o Nome do Treinador e a Senha de Acesso!");
+    return;
+  }
+
+  if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
+
+  try {
+    // Dispara requisição segura em formato text/plain para ignorar bloqueios de CORS
+    const resposta = await fetch(URL_SISTEMA_CHAVAS, {
+      method: 'POST',
+      body: JSON.stringify({ action: "registrarParticipacao", nome, senha, escopo: tipoAtividade })
+    });
+    const dadosServidor = await resposta.json();
+
+    if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
+      informacoesJogadorLogado = { nome, senha };
+      localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
+      
+      if (statusElement) {
+        statusElement.innerText = tipoAtividade === 'torneio' 
+          ? "Inscrição confirmada na árvore do Campeonato VGC!" 
+          : "Inscrição efetuada na urna de Sorteios de Brindes!";
+      }
+      
+      setTimeout(() => liberarAmbientePrincipal(informacoesJogadorLogado), 1500);
+    } else {
+      if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais de acesso.";
+    }
+  } catch (erro) {
+    console.error(erro);
+    if (statusElement) statusElement.innerText = "Erro de rede. Verifique seu servidor ou implantação.";
+  }
+}
+
+function liberarAmbientePrincipal(dadosUsuario) {
+  const telaAuth = document.getElementById('auth-screen');
+  const telaMain = document.getElementById('main-screen');
+  const painelAdmin = document.getElementById('painel-admin');
+  const nomeDisplay = document.getElementById('user-display');
+
+  if (telaAuth) telaAuth.classList.add('hidden');
+  if (telaMain) telaMain.classList.remove('hidden');
+  if (nomeDisplay) nomeDisplay.innerText = dadosUsuario.nome;
+
+  // Trava de segurança administrativa: Substitua pelo seu nick exato
+  if (dadosUsuario.nome.toLowerCase() === "sainths") {
+    if (painelAdmin) painelAdmin.classList.remove('hidden');
+  } else {
+    if (painelAdmin) painelAdmin.classList.add('hidden');
+  }
+
+  // Liga o monitoramento em tempo real a cada 10 segundos para ver os avanços das chaves
+  sincronizarDadosGeraisTorneio();
+  if (loopMonitoramento) clearInterval(loopMonitoramento);
+  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 10000);
+}
+// 2. LEITURA EM TEMPO REAL E CONSTRUÇÃO VISUAL DA ÁRVORE MATA-MATA
+async function sincronizarDadosGeraisTorneio() {
+  const containerArvore = document.getElementById('container-fases-arvore');
+  const displayBrinde = document.getElementById('display-brinde-alvo');
+  const displayGanhador = document.getElementById('display-ganhador-sorteio');
+
+  try {
+    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
+    const payload = await resposta.json();
+
+    // Sincroniza a Urna de Prêmios dinamicamente na tela de todos
+    if (displayBrinde) displayBrinde.innerText = payload.itemSorteio || "Aguardando novo brinde...";
+    if (displayGanhador) displayGanhador.innerText = payload.ganhadorSorteio || "???";
+
+    // Desenha as fases do torneio se houver chaves geradas
+    if (!payload.confrontos || payload.confrontos.length === 0) {
+      if (containerArvore) containerArvore.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando o organizador fechar as inscrições e montar as chaves oficiais...</p>`;
+      return;
+    }
+
+    // Organiza os confrontos divididos em subcategorias (Preliminar, Oitavas, Quartas, Semi, Final)
+    let agrupamentoFases = {};
+    payload.confrontos.forEach(duelo => {
+      if (!agrupamentoFases[duelo.fase]) agrupamentoFases[duelo.fase] = [];
+      agrupamentoFases[duelo.fase].push(duelo);
+    });
+
+    let htmlGerado = "";
+    for (const nomeFase in agrupamentoFases) {
+      htmlGerado += `
+        <div class="fase-secao">
+          <div class="fase-header">${nomeFase}</div>`;
+      
+      agrupamentoFases[nomeFase].forEach(match => {
+        const isWinner1 = match.vencedor === match.j1;
+        const isWinner2 = match.vencedor === match.j2;
+        
+        // Verifica se o jogador logado está participando deste card específico e a partida está ativa
+        const pertenceAoDuelo = informacoesJogadorLogado && (informacoesJogadorLogado.nome === match.j1 || informacoesJogadorLogado.nome === match.j2);
+        const mostrarBotaoReport = pertenceAoDuelo && !match.vencedor && match.j2 !== "BYE";
+
+        const botaoHTML = mostrarBotaoReport 
+          ? `<button onclick="reportarVitoriaDireta('${match.id}', '${informacoesJogadorLogado.nome}')" class="btn-vitoria">🏆 Venci</button>` 
+          : "";
+
+        const tagBye1 = match.j2 === "BYE" ? `<span class="tag-bye">Avanço Automático</span>` : "";
+
+        htmlGerado += `
+          <div class="card-duelo">
+            <div class="duelistas-nomes">
+              <div class="linha-treinador ${isWinner1 ? 'winner' : ''}">
+                ${match.j1 === "BYE" ? "⭐ Vaga de Isenção" : "🏃 " + match.j1} ${isWinner1 ? '🏆' : ''} ${tagBye1}
+              </div>
+              <div class="linha-treinador ${isWinner2 ? 'winner' : ''}">
+                ${match.j2 === "BYE" ? "⭐ Vaga de Isenção" : "🏃 " + match.j2} ${isWinner2 ? '🏆' : ''}
+              </div>
+            </div>
+            ${botaoHTML}
+          </div>`;
+      });
+      htmlGerado += `</div>`;
+    }
+
+    if (containerArvore) containerArvore.innerHTML = htmlGerado;
+
+  } catch (erro) {
+    console.warn("Sincronização em segundo plano oscilou.");
+  }
+}
+
+// 3. COMANDOS EXCLUSIVOS DO ORGANIZADOR SAINTHS
+async function gerarChaveChampionship() {
+  if (confirm("Deseja fechar as inscrições atuais e realizar o sorteio de chaves eliminatórias com BYEs automáticos?")) {
+    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "gerarChaveamentoMaster" }) });
+    alert("Chaves geradas no servidor! Atualizando painéis...");
+    sincronizarDadosGeraisTorneio();
+  }
+}
+
+async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (confirm(`Confirma que você venceu o Set MD3 desta rodada? O placar será atualizado para a liga inteira.`)) {
+    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "computarVitoriaDuelo", idDuelo, vencedor: nomeVencedor }) });
+    sincronizarDadosGeraisTorneio();
+  }
+}
+
+async function dispararSorteioBrinde() {
+  const itemInput = document.getElementById('input-nome-premio').value.trim();
+  if (!itemInput) {
+    alert("Digite o nome do prêmio ou brinde antes de rodar a roleta!");
+    return;
+  }
+  await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
+  alert("Sorteio concluído! Ganhador publicado na tela dos treinadores.");
+  document.getElementById('input-nome-premio').value = "";
+  sincronizarDadosGeraisTorneio();
+}
+
+async function resetarDadosMaster(tipoReset) {
+  const mensagemConfirmacao = tipoReset === 'torneio' 
+    ? "⚠️ PERIGO: Isso apagará todas as chaves, histórico e inscrições de competidores. Iniciar nova temporada?" 
+    : "⚠️ Limpar a urna de sorteios e remover todos os inscritos da lista de brindes?";
+    
+  if (confirm(mensagemConfirmacao)) {
+    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
+    alert("Banco de dados resetado com sucesso!");
+    sincronizarDadosGeraisTorneio();
+  }
+}
+
+function fazerLogout() {
+  localStorage.removeItem('SessionTournament');
+  if (loopMonitoramento) clearInterval(loopMonitoramento);
+  location.reload();
+}
+</script>
+</body>
+</html>
