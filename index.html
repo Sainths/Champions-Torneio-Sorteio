@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Champions Tournament - Bracket & Draw</title>
-  <!-- Vínculo essencial para o logo do Manifest (PWA Instalável) -->
+  <!-- Vínculo essencial para o logo do Manifest e Favicon contra erro 404 -->
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icone-sorteio.png">
   <style>
     :root {
       --azul-arena: #0a2e5c;
@@ -120,9 +121,8 @@
 </head>
 <body>
 
-  <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS -->
+  <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS COM CAMPO DE TIME -->
   <div id="auth-screen" class="container">
-    <!-- Imagem de Perfil do app associada ao Manifest -->
     <img src="icone-sorteio.png" alt="Logo Tournament" style="width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 12px; background-color: var(--fundo-escuro); object-fit: cover; object-position: center;">
     
     <h1>Champions Tournament</h1>
@@ -136,6 +136,12 @@
     <div class="input-group">
       <label>Senha de Acesso</label>
       <input type="password" id="senha" placeholder="****">
+    </div>
+
+    <!-- Novo campo adicionado para registro do time no campeonato -->
+    <div class="input-group">
+      <label>Seu Time (Apenas para o Torneio - 6 Pokémon)</label>
+      <input type="text" id="deck-torneio" placeholder="Ex: Incineroar, Zacian, Miraidon...">
     </div>
     
     <div class="btn-duo">
@@ -196,10 +202,9 @@
 
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
-  
 <script>
 // --- CONFIGURAÇÃO DA API DA LIGA ---
-const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/library/d/1YtmfKOAJxM-HrlAeRitVfGU23_thM2fwSk6MUYywRKWUBQAlBHh9wYfv/2"; // Link oficial da sua implantação
+const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbzHMnkZfy9oieYPCx_PXDDjp4jAJK463HeqYm_L-rUT84pfsQHhdqjmf_BxlZVMXsdv/exec"; // Link oficial da sua implantação
 let loopMonitoramento = null;
 let informacoesJogadorLogado = null;
 
@@ -235,14 +240,20 @@ function trocarAbaVisual(idAbaAlvo) {
   }
 }
 
-// 1. LÓGICA DE DUPLA INSCRIÇÃO INDEPENDENTE
+// 1. LÓGICA DE INSCRIÇÃO ATUALIZADA (ENVIA OS 6 POKÉMON)
 async function registrarInscricao(tipoAtividade) {
   const nome = document.getElementById('nome').value.trim();
   const senha = document.getElementById('senha').value;
+  const timeDigitado = document.getElementById('deck-torneio') ? document.getElementById('deck-torneio').value.trim() : "";
   const statusElement = document.getElementById('status-login');
 
   if (!nome || !senha) {
     alert("Preencha o Nome do Treinador e a Senha de Acesso!");
+    return;
+  }
+
+  if (tipoAtividade === 'torneio' && !timeDigitado) {
+    alert("Por favor, digite os 6 Pokémon do seu time para se inscrever no torneio!");
     return;
   }
 
@@ -255,7 +266,13 @@ async function registrarInscricao(tipoAtividade) {
       headers: {
         'Content-Type': 'text/plain;charset=utf-8'
       },
-      body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, escopo: tipoAtividade })
+      body: JSON.stringify({ 
+        action: "registrarParticipacao", 
+        nome: nome, 
+        senha: senha, 
+        deck: timeDigitado, // Envia a lista de Pokémon
+        escopo: tipoAtividade 
+      })
     });
     const dadosServidor = await resposta.json();
 
@@ -381,7 +398,7 @@ async function sincronizarDadosGeraisTorneio() {
   }
 }
 
-// 3. COMANDOS EXCLUSIVOS DO ORGANIZADOR SAINTHS (CORRIGIDO COM CONTENT-TYPE TEXT/PLAIN)
+// 3. COMANDOS EXCLUSIVOS DO ORGANIZADOR SAINTHS
 async function gerarChaveChampionship() {
   if (confirm("Deseja fechar as inscrições atuais e realizar o sorteio de chaves eliminatórias com BYEs automáticos?")) {
     await fetch(URL_SISTEMA_CHAVAS, { 
