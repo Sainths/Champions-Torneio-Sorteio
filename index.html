@@ -223,13 +223,26 @@ window.onload = () => {
   }
 };
 
+// CORREÇÃO VISUAL: Garante o destaque azul claro neon na aba ativa
 function trocarAbaVisual(idAbaAlvo) {
   const abas = document.querySelectorAll('.tab-content');
   const botoes = document.querySelectorAll('.tab-btn');
+  
+  // Esconde todas as abas
   abas.forEach(aba => aba.classList.add('hidden'));
+  // Remove o aceso azul de todos os botões
   botoes.forEach(btn => btn.classList.remove('active'));
+  
+  // Mostra a aba clicada
   const abaAtiva = document.getElementById(idAbaAlvo);
   if (abaAtiva) abaAtiva.classList.remove('hidden');
+  
+  // Acende o botão correspondente em azul neon
+  if (idAbaAlvo === 'aba-chaveamento') {
+    botoes[0].classList.add('active'); // Acende o primeiro botão (Chaves VGC)
+  } else if (idAbaAlvo === 'aba-premios') {
+    botoes[1].classList.add('active'); // Acende o segundo botão (Urna de Prêmios)
+  }
 }
 
 // 1. DUPLA INSCRIÇÃO INDEPENDENTE COM REGISTRO DO TIME
