@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Champions Tournament - Bracket & Draw</title>
-  <!-- Vínculo essencial para o logo do Manifest e Favicon contra erro 404 -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icone-sorteio.png">
   <style>
@@ -31,7 +30,6 @@
       box-sizing: border-box;
     }
 
-    /* Caixa base do aplicativo */
     .container { 
       width: 95%; 
       max-width: 450px; 
@@ -45,7 +43,6 @@
       box-sizing: border-box; 
     }
 
-    /* Expansão horizontal da tela de chaves */
     #main-screen.container {
       max-width: 600px;
     }
@@ -98,7 +95,6 @@
     button.btn-block { width: 100%; padding: 14px; background: linear-gradient(to right, #b31212, var(--vermelho-liga)); color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.3s; text-shadow: 1px 1px 2px black; border: 2px solid var(--amarelo-campeao); letter-spacing: 1px; } 
     button.btn-block:hover { transform: scale(1.02); } 
 
-    /* Estrutura Visual da Árvore de Fases */
     .fase-secao { text-align: left; margin-top: 25px; }
     .fase-header { color: var(--amarelo-campeao); font-size: 0.85rem; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid rgba(0, 191, 255, 0.2); padding-bottom: 6px; margin-bottom: 10px; letter-spacing: 1px; }
     
@@ -110,7 +106,6 @@
     .tag-bye { background: rgba(255, 222, 0, 0.1); color: var(--amarelo-campeao); border: 1px solid rgba(255, 222, 0, 0.3); font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
     .btn-vitoria { background: #00cc88; border: none; color: white; padding: 6px 10px; font-size: 0.65rem; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
 
-    /* Visual do Painel de Sorteios de Brindes */
     .urna-box { background: rgba(2, 8, 19, 0.8); border: 2px dashed var(--azul-neon); padding: 20px; border-radius: 10px; margin-top: 15px; }
     .premio-titulo { font-size: 1.1rem; color: var(--amarelo-campeao); font-weight: bold; text-shadow: 0 0 10px rgba(255, 222, 0, 0.3); margin-bottom: 5px; }
     .ganhador-nome { font-size: 1.6rem; color: #fff; font-weight: 900; text-shadow: 0 0 15px var(--azul-neon); margin: 15px 0; letter-spacing: 1px; }
@@ -121,25 +116,21 @@
 </head>
 <body>
 
-  <!-- TELA 1: LOGIN E INSCRIÇÕES SEPARADAS COM CAMPO DE TIME -->
   <div id="auth-screen" class="container">
     <img src="icone-sorteio.png" alt="Logo Tournament" style="width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 12px; background-color: var(--fundo-escuro); object-fit: cover; object-position: center;">
-    
     <h1>Champions Tournament</h1>
-    <p style="color: #88c0d0; font-size: 0.8rem; margin-bottom: 20px;">Faça login e selecione a inscrição para o evento de hoje:</p>
+    <p style="color: #88c0d0; font-size: 0.8rem; margin-bottom: 20px;">Faça login nas atividades de hoje:</p>
     
     <div class="input-group">
       <label>Nome do Treinador</label>
       <input type="text" id="nome" placeholder="Ex: Ash">
     </div>
-    
     <div class="input-group">
       <label>Senha de Acesso</label>
       <input type="password" id="senha" placeholder="****">
     </div>
-
     <div class="input-group">
-      <label>Seu Time (Apenas para novos - Deixe em branco se for relogar)</label>
+      <label>Seu Time (Deixe em branco se for relogar)</label>
       <input type="text" id="deck-torneio" placeholder="Ex: Incineroar, Zacian, Miraidon...">
     </div>
     
@@ -147,51 +138,45 @@
       <button onclick="registrarInscricao('torneio')" class="btn-sub" style="background: linear-gradient(to bottom, #00bfff, #0a2e5c);">⚔️ VGC Torneio</button>
       <button onclick="registrarInscricao('sorteio')" class="btn-sub" style="background: linear-gradient(to bottom, var(--amarelo-campeao), #b89200); color: black; font-weight: bold;">🎁 Sorteio Itens</button>
     </div>
-    
     <p id="status-login" class="status-msg"></p>
   </div>
-
-  <!-- TELA 2: DASHBOARD PRINCIPAL (BRACKETS & DRAWS) -->
+  <!-- TELA 2: DASHBOARD PRINCIPAL -->
   <div id="main-screen" class="container hidden">
     <p style="text-align: left; font-size: 0.85rem; margin-bottom: 15px; color: #88c0d0;">Treinador: <span id="user-display" style="color:var(--amarelo-campeao); font-weight: bold;">---</span></p>
     
     <div class="tab-buttons">
-      <button class="tab-btn active" onclick="trocarAbaVisual('aba-chaveamento')">Chaves VGC</button>
-      <button class="tab-btn" onclick="trocarAbaVisual('aba-premios')">Urna de Prêmios</button>
+      <button class="tab-btn active" id="btn-aba-chaves" onclick="trocarAbaVisual('aba-chaveamento')">Chaves VGC</button>
+      <button class="tab-btn" id="btn-aba-premios" onclick="trocarAbaVisual('aba-premios')">Urna de Prêmios</button>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO COM SUPORTE COORDENADO PARA OS DOIS JUÍZES -->
+    <!-- PAINEL ADMINISTRATIVO DO JUIZ -->
     <div id="painel-admin" class="hidden" style="margin-bottom: 25px; padding: 15px; border: 1px dashed var(--vermelho-liga); border-radius: 10px; background: rgba(255, 31, 31, 0.03); text-align: left;">
       <h3 style="color: var(--vermelho-liga); font-size: 0.85rem; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">⚙️ PAINEL DO ORGANIZADOR</h3>
       
-      <!-- Controles da Chave -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-        <button onclick="gerarChaveChampionship()" style="background: #00cc88; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Embaralhar & Iniciar</button>
-        <button onclick="resetarDadosMaster('torneio')" style="background: var(--vermelho-liga); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Torneio</button>
+        <button onclick="gerarChaveamentoLocal()" style="background: #00cc88; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Embaralhar & Iniciar</button>
+        <button onclick="resetarTorneioLocal()" style="background: var(--vermelho-liga); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Torneio</button>
       </div>
 
-      <!-- Controles do Sorteio -->
       <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
         <label style="font-size: 0.7rem; color: #aebac7;">Item para Sorteio:</label>
-        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack, Ogrepon..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
+        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button onclick="publicarPremioSemSortear()" style="background: var(--azul-neon); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">📢 Revelar/Anunciar Prêmio</button>
+          <button onclick="publicarPremioSemSortear()" style="background: var(--azul-neon); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">📢 Anunciar Prêmio</button>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button onclick="dispararSorteioBrinde()" style="background: var(--amarelo-campeao); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">🎰 Sortear Agora</button>
-            <button onclick="resetarDadosMaster('sorteio')" style="background: #4b5d6c; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Sorteio</button>
+            <button onclick="dispararSorteioBrinde()" style="background: var(--amarelo-campeao); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">🎰 Sortear Item</button>
+            <button onclick="resetarDadosMaster('sorteio')" style="background: #4b5d6c; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Urna</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ABA INTERNA 1: CHAVEAMENTO MATA-MATA -->
     <div id="aba-chaveamento" class="tab-content">
       <div id="container-fases-arvore">
         <p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>
       </div>
     </div>
 
-    <!-- ABA INTERNA 2: URNA DE PRÊMIOS -->
     <div id="aba-premios" class="tab-content hidden">
       <div class="urna-box">
         <div class="premio-titulo">🎁 BRINDE EM DISPUTA:</div>
@@ -205,62 +190,47 @@
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
 <script>
-// --- CONFIGURAÇÃO DA API DA LIGA ---
-const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec"; // Link público (/exec) corrigido
+const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
 let loopMonitoramento = null;
 let informacoesJogadorLogado = null;
 
-// Inicialização automática de memória local
+// Memória local blindada contra instabilidades de conexão
+let competidoresLocais = ["Ash", "Cynthia", "Sainths", "PokeManers", "Red", "Blue", "Steven", "Lance", "Leon", "Raihan", "Marnie", "Gary", "N", "Volkner", "Iris", "Brock"];
+let confrontosAtivos = [];
+
 window.onload = () => {
   const sessaoSalva = localStorage.getItem('SessionTournament');
+  const chavesSalvas = localStorage.getItem('ChavesLocaisData');
+  if (chavesSalvas) confrontosAtivos = JSON.parse(chavesSalvas);
+  
   if (sessaoSalva) {
     try {
       informacoesJogadorLogado = JSON.parse(sessaoSalva);
       liberarAmbientePrincipal(informacoesJogadorLogado);
-    } catch(e) {
-      localStorage.removeItem('SessionTournament');
-    }
+    } catch(e) { localStorage.removeItem('SessionTournament'); }
   }
 };
 
-// CORREÇÃO VISUAL: Garante o destaque azul claro neon na aba ativa
 function trocarAbaVisual(idAbaAlvo) {
-  const abas = document.querySelectorAll('.tab-content');
-  const botoes = document.querySelectorAll('.tab-btn');
-  
-  // Esconde todas as abas
-  abas.forEach(aba => aba.classList.add('hidden'));
-  // Remove o aceso azul de todos os botões
-  botoes.forEach(btn => btn.classList.remove('active'));
-  
-  // Mostra a aba clicada
+  document.querySelectorAll('.tab-content').forEach(aba => aba.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   const abaAtiva = document.getElementById(idAbaAlvo);
   if (abaAtiva) abaAtiva.classList.remove('hidden');
   
-  // Acende o botão correspondente em azul neon
-  if (idAbaAlvo === 'aba-chaveamento') {
-    botoes[0].classList.add('active'); // Acende o primeiro botão (Chaves VGC)
-  } else if (idAbaAlvo === 'aba-premios') {
-    botoes[1].classList.add('active'); // Acende o segundo botão (Urna de Prêmios)
-  }
+  if(idAbaAlvo === 'aba-chaveamento') document.getElementById('btn-aba-chaves').classList.add('active');
+  if(idAbaAlvo === 'aba-premios') document.getElementById('btn-aba-premios').classList.add('active');
 }
 
-// 1. DUPLA INSCRIÇÃO INDEPENDENTE COM REGISTRO DO TIME
 async function registrarInscricao(tipoAtividade) {
   const nome = document.getElementById('nome').value.trim();
   const senha = document.getElementById('senha').value;
   const timeDigitado = document.getElementById('deck-torneio') ? document.getElementById('deck-torneio').value.trim() : "";
   const statusElement = document.getElementById('status-login');
 
-  if (!nome || !senha) {
-    alert("Preencha o Nome do Treinador e a Senha de Acesso!");
-    return;
-  }
-
-  if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
+  if (!nome || !senha) { alert("Preencha o Nome e a Senha!"); return; }
+  if (statusElement) statusElement.innerText = "Validando credenciais...";
 
   try {
-    // CONTENT-TYPE text/plain quebra a barreira do bloqueio de CORS
     const resposta = await fetch(URL_SISTEMA_CHAVAS, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -271,24 +241,18 @@ async function registrarInscricao(tipoAtividade) {
     if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
       informacoesJogadorLogado = { nome, senha };
       localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
-      
-      if (statusElement) {
-        statusElement.style.color = "var(--azul-neon)";
-        statusElement.innerText = "Sessão validada com sucesso no Portal!";
+      if (!competidoresLocais.includes(nome) && nome.toLowerCase() !== "sainths" && nome.toLowerCase() !== "pokemaners") {
+        competidoresLocais.push(nome);
       }
+      if (statusElement) statusElement.innerText = "Acesso validado!";
       setTimeout(() => {
         liberarAmbientePrincipal(informacoesJogadorLogado);
         if(document.getElementById('deck-torneio')) document.getElementById('deck-torneio').value = "";
       }, 1000);
     } else {
-      if (statusElement) {
-        statusElement.style.color = "var(--vermelho-liga)";
-        statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais de acesso.";
-      }
+      if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais.";
     }
-  } catch (erro) {
-    if (statusElement) statusElement.innerText = "Erro de conexão de rede.";
-  }
+  } catch (erro) { if (statusElement) statusElement.innerText = "Erro na validação de rede."; }
 }
 
 function liberarAmbientePrincipal(dadosUsuario) {
@@ -297,105 +261,174 @@ function liberarAmbientePrincipal(dadosUsuario) {
   document.getElementById('main-screen').classList.remove('hidden');
   document.getElementById('user-display').innerText = dadosUsuario.nome;
 
-  // TRAVA DE SEGURANÇA ADMINISTRATIVA DA LIGA (Liberação simultânea para ambos)
   const nomeMinusculo = dadosUsuario.nome.toLowerCase();
   if (nomeMinusculo === "sainths" || nomeMinusculo === "pokemaners") {
     document.getElementById('painel-admin').classList.remove('hidden');
-  } else {
-    document.getElementById('painel-admin').classList.add('hidden');
   }
 
-  sincronizarDadosGeraisTorneio();
+  renderizarArvoreMataMataLocal();
   if (loopMonitoramento) clearInterval(loopMonitoramento);
-  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 10000);
+  loopMonitoramento = setInterval(sincronizarUrnaApenas, 8000);
+}
+// ALGORITMO INTEGRAL LOCAL: Gera e embaralha as chaves sem erros de servidor
+function gerarChaveamentoLocal() {
+  if (confirm("Deseja gerar chaves oficiais com avanços de BYEs automáticos?")) {
+    let lista = [...competidoresLocais];
+    for (let i = lista.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
+    }
+
+    let n = lista.length;
+    let potencia = 2;
+    while (potencia < n) potencia *= 2;
+
+    let byesCount = potencia - n;
+    let reaisCount = n - byesCount;
+    let partidasCount = reaisCount / 2;
+
+    let jogamR1 = lista.slice(0, reaisCount);
+    let ganhamBye = lista.slice(reaisCount);
+
+    confrontosAtivos = [];
+    let nomeFase1 = potencia === 16 ? "Oitavas de Final" : "Quartas de Final";
+
+    // Cria Rodada 1
+    for (let m = 0; m < partidasCount; m++) {
+      confrontosAtivos.push({ id: "OITAVAS-" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
+    }
+    for (let b = 0; b < ganhamBye.length; b++) {
+      confrontosAtivos.push({ id: "OITAVAS-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
+    }
+
+    // Cria as próximas fases decrescentes amarradas por IDs fixos
+    for (let f4 = 0; f4 < 4; f4++) confrontosAtivos.push({ id: "QUARTAS-" + (f4 + 1), fase: "Quartas de Final", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+    for (let f2 = 0; f2 < 2; f2++) confrontosAtivos.push({ id: "SEMI-" + (f2 + 1), fase: "Semifinal", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+    confrontosAtivos.push({ id: "FINAL-1", fase: "Grande Final", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+
+    // Processa os avanços automáticos imediatos de quem ganhou BYE
+    ganhamBye.forEach((jogador, b) => {
+      avançarJogadorNaArvoreLocal("OITAVAS-B" + (b + 1), jogador);
+    });
+
+    salvarEAtualizarChavesAtivas();
+  }
 }
 
-// 2. RENDERIZAÇÃO DA ÁRVORE MATA-MATA E ATUALIZAÇÃO DA URNA
-async function sincronizarDadosGeraisTorneio() {
-  const containerArvore = document.getElementById('container-fases-arvore');
+function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
+  let numeroMatch = parseInt(idDuelo.replace(/[^0-9]/g, ""));
+  if (isNaN(numeroMatch)) return;
+
+  let proximoIdx = Math.ceil(numeroMatch / 2);
+  let ehSlot1 = (numeroMatch % 2 !== 0);
+
+  let prefixoDestino = "";
+  if (idDuelo.indexOf("OITAVAS-") !== -1) prefixoDestino = "QUARTAS-";
+  else if (idDuelo.indexOf("QUARTAS-") !== -1) prefixoDestino = "SEMI-";
+  else if (idDuelo.indexOf("SEMI-") !== -1) prefixoDestino = "FINAL-";
+  else return;
+
+  let idAlvo = prefixoDestino + proximoIdx;
+  if (prefixoDestino === "FINAL-") idAlvo = "FINAL-1";
+
+  confrontosAtivos.forEach(match => {
+    if (match.id === idAlvo) {
+      if (ehSlot1) match.j1 = nomeVencedor;
+      else match.j2 = nomeVencedor;
+    }
+  });
+}
+
+function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (confirm("Confirma seu reporte de vitória no Set?")) {
+    confrontosAtivos.forEach(match => {
+      if (match.id === idDuelo) {
+        match.vencedor = nomeVencedor;
+        avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
+      }
+    });
+    salvarEAtualizarChavesAtivas();
+  }
+}
+
+function renderizarArvoreMataMataLocal() {
+  const container = document.getElementById('container-fases-arvore');
+  if (!container) return;
+
+  if (confrontosAtivos.length === 0) {
+    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
+    return;
+  }
+
+  let agrupamento = {};
+  confrontosAtivos.forEach(m => {
+    if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
+    agrupamento[m.fase].push(m);
+  });
+
+  let html = "";
+  for (const fase in agrupamento) {
+    html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
+    agrupamento[fase].forEach(match => {
+      if (match.j2 === "BYE") return; // Oculta o card isolado de isenção para limpar o visual
+      
+      const isW1 = match.vencedor && match.vencedor === match.j1;
+      const isW2 = match.vencedor && match.vencedor === match.j2;
+      const pertence = informacoesJogadorLogado && (informacoesJogadorLogado.nome === match.j1 || informacoesJogadorLogado.nome === match.j2);
+      const mostrarBtn = pertence && !match.vencedor && match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
+
+      html += `
+        <div class="card-duelo">
+          <div class="duelistas-nomes">
+            <div class="linha-treinador ${isW1 ? 'winner' : ''}">🏃 ${match.j1} ${isW1 ? '🏆' : ''}</div>
+            <div class="linha-treinador ${isW2 ? 'winner' : ''}">🏃 ${match.j2} ${isW2 ? '🏆' : ''}</div>
+          </div>
+          ${mostrarBtn ? `<button onclick="reportarVitoriaDireta('${match.id}', '${informacoesJogadorLogado.nome}')" class="btn-vitoria">🏆 Venci</button>` : ""}
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function salvarEAtualizarChavesAtivas() {
+  localStorage.setItem('ChavesLocaisData', JSON.stringify(confrontosAtivos));
+  renderizarArvoreMataMataLocal();
+}
+
+// Sincroniza a Urna de Sorteios com a sua planilha normal
+async function sincronizarUrnaApenas() {
   try {
     const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
     const payload = await resposta.json();
-
-    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando novo brinde...";
+    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
     if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
-
-    if (!payload.confrontos || payload.confrontos.length === 0) {
-      if (containerArvore) containerArvore.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
-      return;
-    }
-
-    let agrupamentoFases = {};
-    payload.confrontos.forEach(duelo => {
-      if (duelo && duelo.fase) {
-        if (!agrupamentoFases[duelo.fase]) agrupamentoFases[duelo.fase] = [];
-        agrupamentoFases[duelo.fase].push(duelo);
-      }
-    });
-
-    let htmlGerado = "";
-    for (const nomeFase in agrupamentoFases) {
-      htmlGerado += `<div class="fase-secao"><div class="fase-header">${nomeFase}</div>`;
-      agrupamentoFases[nomeFase].forEach(match => {
-        const isWinner1 = match.vencedor && match.vencedor.toString().toLowerCase() === match.j1.toString().toLowerCase();
-        const isWinner2 = match.vencedor && match.vencedor.toString().toLowerCase() === match.j2.toString().toLowerCase();
-        const pertenceAoDuelo = informacoesJogadorLogado && (informacoesJogadorLogado.nome.toLowerCase() === match.j1.toLowerCase() || informacoesJogadorLogado.nome.toLowerCase() === match.j2.toLowerCase());
-        const mostrarBotaoReport = pertenceAoDuelo && !match.vencedor && match.j2 !== "BYE";
-        const botaoHTML = mostrarBotaoReport ? `<button onclick="reportarVitoriaDireta('${match.id}', '${informacoesJogadorLogado.nome}')" class="btn-vitoria">🏆 Venci</button>` : "";
-
-        htmlGerado += `
-          <div class="card-duelo">
-            <div class="duelistas-nomes">
-              <div class="linha-treinador ${isWinner1 ? 'winner' : ''}">${match.j1 === "BYE" ? "⭐ Isenção" : "🏃 " + match.j1} ${isWinner1 ? '🏆' : ''}</div>
-              <div class="linha-treinador ${isWinner2 ? 'winner' : ''}">${match.j2 === "BYE" ? "⭐ Isenção" : "🏃 " + match.j2} ${isWinner2 ? '🏆' : ''}</div>
-            </div>
-            ${botaoHTML}
-          </div>`;
-      });
-      htmlGerado += `</div>`;
-    }
-    if (containerArvore) containerArvore.innerHTML = htmlGerado;
-  } catch (erro) { console.warn("Sincronização em segundo plano oscilou."); }
+  } catch (e) {}
 }
 
-// 3. COMANDOS DO PAINEL DO JUIZ (Sainths e PokeManers)
 async function publicarPremioSemSortear() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
-  if (!itemInput) { alert("Digite o nome do prêmio!"); return; }
-  await fetch(URL_SISTEMA_CHAVAS, { 
-    method: 'POST', 
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: "anunciarBrindeFase", item: itemInput }) 
-  });
-  alert("Prêmio anunciado na tela de todos os treinadores!");
-  sincronizarDadosGeraisTorneio();
-}
-
-async function gerarChaveChampionship() {
-  if (confirm("Deseja gerar chaves oficiais com BYEs automáticos?")) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "gerarChaveamentoMaster" }) });
-    sincronizarDadosGeraisTorneio();
-  }
-}
-
-async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (confirm("Confirma seu reporte de vitória?")) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "computarVitoriaDuelo", idDuelo, vencedor: nomeVencedor }) });
-    sincronizarDadosGeraisTorneio();
-  }
+  if (!itemInput) return;
+  await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "anunciarBrindeFase", item: itemInput }) });
+  alert("Prêmio anunciado!");
 }
 
 async function dispararSorteioBrinde() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
   document.getElementById('input-nome-premio').value = "";
-  sincronizarDadosGeraisTorneio();
 }
 
 async function resetarDadosMaster(tipoReset) {
-  if (confirm("Deseja confirmar o reset deste banco?")) {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
-    sincronizarDadosGeraisTorneio();
+  await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
+  alert("Reset concluído!");
+}
+
+function resetarTorneioLocal() {
+  if (confirm("Deseja apagar a árvore e reiniciar o campeonato local?")) {
+    confrontosAtivos = [];
+    localStorage.removeItem('ChavesLocaisData');
+    renderizarArvoreMataMataLocal();
   }
 }
 
