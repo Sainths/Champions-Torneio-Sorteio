@@ -351,7 +351,7 @@ function reportarVitoriaDireta(idDuelo, nomeVencedor) {
   }
 }
 
-// --- RENDERIZADOR DE ÁRVORE COM DOIS BOTÕES INDIVIDUAIS DE VITÓRIA ---
+// --- RENDERIZADOR DE ÁRVORE COM DESTAQUE DO CAMPEÃO SUPREMO ---
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -361,17 +361,39 @@ function renderizarArvoreMataMataLocal() {
     return;
   }
 
+  // Verifica se a Grande Final já possui um vencedor determinado na memória
+  let nomeCampeaoSupremo = "";
+  confrontosAtivos.forEach(match => {
+    if (match.id === "FINAL-1" && match.vencedor && match.vencedor !== "") {
+      nomeCampeaoSupremo = match.vencedor;
+    }
+  });
+
+  let html = "";
+
+  // NOVO: Se houver um campeão, exibe um painel de pódio dourado glorioso no topo das chaves
+  if (nomeCampeaoSupremo !== "") {
+    html += `
+      <div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite;">
+        <div style="font-size: 1.8rem;">👑🏆👑</div>
+        <div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div>
+        <div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0; letter-spacing: 1px;">
+          ${nomeCampeaoSupremo}
+        </div>
+        <div style="font-size: 0.75rem; color: #88c0d0; font-style: italic;">Parabéns pela conquista do título Master VGC!</div>
+      </div>`;
+  }
+
   let agrupamento = {};
   confrontosAtivos.forEach(m => {
     if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
     agrupamento[m.fase].push(m);
   });
 
-  let html = "";
   for (const fase in agrupamento) {
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
     agrupamento[fase].forEach(match => {
-      if (match.j2 === "BYE") return; // Oculta os cards de BYE isolados
+      if (match.j2 === "BYE") return; 
       
       const isW1 = match.vencedor && match.vencedor === match.j1;
       const isW2 = match.vencedor && match.vencedor === match.j2;
@@ -379,11 +401,8 @@ function renderizarArvoreMataMataLocal() {
       const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
       const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
 
-      // Trava de exibição para os competidores comuns reais
       const eDonoJ1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j1;
       const eDonoJ2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
-
-      // Os botões só aparecem se a partida não estiver em "Aguardando..."
       const partidaPronta = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
       html += `
@@ -403,6 +422,19 @@ function renderizarArvoreMataMataLocal() {
     html += `</div>`;
   }
   container.innerHTML = html;
+}
+// Adiciona animação visual de pulsação para o destaque dourado do campeão
+if (!document.getElementById('style-campeao-pulse')) {
+  const estiloPulse = document.createElement('style');
+  estiloPulse.id = 'style-campeao-pulse';
+  estiloPulse.innerHTML = `
+    @keyframes pulse {
+      0% { box-shadow: 0 0 15px rgba(255, 222, 0, 0.4); border-color: rgba(255, 222, 0, 0.6); }
+      50% { box-shadow: 0 0 25px rgba(255, 222, 0, 0.7); border-color: rgba(255, 222, 0, 1); }
+      100% { box-shadow: 0 0 15px rgba(255, 222, 0, 0.4); border-color: rgba(255, 222, 0, 0.6); }
+    }
+  `;
+  document.head.appendChild(estiloPulse);
 }
   
 // Função auxiliar de segurança para exibição de botões individuais
