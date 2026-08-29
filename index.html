@@ -189,6 +189,7 @@
 
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
+  
 <script>
 const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
 let loopMonitoramento = null;
@@ -450,40 +451,167 @@ function salvarEAtualizarChavesAtivas() {
   localStorage.setItem('ChavesLocaisData', JSON.stringify(confrontosAtivos));
   renderizarArvoreMataMataLocal();
 }
+<script>
+// --- SUBSTITUA A PARTIR DA FUNÇÃO sincronizarUrnaApenas ATÉ O FIM DO SCRIPT ---
 
-// Sincroniza a Urna de Sorteios com a sua planilha normal
-async function sincronizarUrnaApenas() {
+// Sincroniza a Urna de Sorteios E as Chaves do Torneio em Tempo Real na nuvem
+async function sincronizarDadosGeraisTorneio() {
   try {
     const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
     const payload = await resposta.json();
+    
+    // 1. Atualiza a Urna de Prêmios
     if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
     if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
-  } catch (e) {}
+    
+    // 2. Sincroniza a Árvore de Chaves vinda da Nuvem para todos os aparelhos
+    if (payload.chavesNuvem && payload.chavesNuvem.length > 0) {
+      confrontosAtivos = payload.chavesNuvem;
+      renderizarArvoreMataMataLocal();
+    } else {
+      confrontosAtivos = [];
+      const container = document.getElementById('container-fases-arvore');
+      if (container) container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
+    }
+  } catch (e) { console.warn("Aviso na sincronização de rede."); }
 }
 
+function liberarAmbientePrincipal(dadosUsuario) {
+  if(!dadosUsuario || !dadosUsuario.nome) return;
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('main-screen').classList.remove('hidden');
+  document.getElementById('user-display').innerText = dadosUsuario.nome;
+
+  const nomeMinusculo = dadosUsuario.nome.toLowerCase();
+  if (nomeMinusculo === "sainths" || nomeMinusculo === "pokemaners") {
+    document.getElementById('painel-admin').classList.remove('hidden');
+  }
+
+  // Ativa a varredura em tempo real para sincronizar as telas de todos
+  sincronizarDadosGeraisTorneio();
+  if (loopMonitoramento) clearInterval(loopMonitoramento);
+  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 8000);
+}
+
+// ALGORITMO INTEGRAL: Embaralha local e envia a árvore pronta para a Nuvem de forma ultra-rápida
+async function gerarChaveamentoLocal() {
+  if (confirm("Deseja fechar as inscrições e gerar chaves oficiais sincronizadas na Nuvem?")) {
+    let lista = [...competidoresLocais];
+    for (let i = lista.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
+    }
+
+    let n = lista.length;
+    let potencia = 2;
+    while (potencia < n) potencia *= 2;
+
+    let byesCount = potencia - n;
+    let reaisCount = n - byesCount;
+    let partidasCount = reaisCount / 2;
+
+    let jogamR1 = lista.slice(0, reaisCount);
+    let ganhamBye = lista.slice(reaisCount);
+
+    confrontosAtivos = [];
+    let nomeFase1 = potencia === 16 ? "Oitavas de Final" : "Quartas de Final";
+
+    for (let m = 0; m < partidasCount; m++) {
+      confrontosAtivos.push({ id: "OITAVAS-" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
+    }
+    for (let b = 0; b < ganhamBye.length; b++) {
+      confrontosAtivos.push({ id: "OITAVAS-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
+    }
+
+    for (let f4 = 0; f4 < 4; f4++) confrontosAtivos.push({ id: "QUARTAS-" + (f4 + 1), fase: "Quartas de Final", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+    for (let f2 = 0; f2 < 2; f2++) confrontosAtivos.push({ id: "SEMI-" + (f2 + 1), fase: "Semifinal", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+    confrontosAtivos.push({ id: "FINAL-1", fase: "Grande Final", j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+
+    ganhamBye.forEach((jogador, b) => {
+      avançarJogadorNaArvoreLocal("OITAVAS-B" + (b + 1), jogador);
+    });
+
+    // Salva na nuvem instantaneamente
+    await enviarChavesParaNuvem();
+  }
+}
+
+function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
+  let numeroMatch = parseInt(idDuelo.replace(/[^0-9]/g, ""));
+  if (isNaN(numeroMatch)) return;
+
+  let proximoIdx = Math.ceil(numeroMatch / 2);
+  let ehSlot1 = (numeroMatch % 2 !== 0);
+
+  let prefixoDestino = "";
+  if (idDuelo.indexOf("OITAVAS-") !== -1) prefixoDestino = "QUARTAS-";
+  else if (idDuelo.indexOf("QUARTAS-") !== -1) prefixoDestino = "SEMI-";
+  else if (idDuelo.indexOf("SEMI-") !== -1) prefixoDestino = "FINAL-";
+  else return;
+
+  let idAlvo = prefixoDestino + proximoIdx;
+  if (prefixoDestino === "FINAL-") idAlvo = "FINAL-1";
+
+  confrontosAtivos.forEach(match => {
+    if (match.id === idAlvo) {
+      if (ehSlot1) match.j1 = nomeVencedor;
+      else match.j2 = nomeVencedor;
+    }
+  });
+}
+
+async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (confirm("Confirma seu reporte de vitória no Set?")) {
+    confrontosAtivos.forEach(match => {
+      if (match.id === idDuelo) {
+        match.vencedor = nomeVencedor;
+        avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
+      }
+    });
+    await enviarChavesParaNuvem();
+  }
+}
+
+async function enviarChavesParaNuvem() {
+  renderizarArvoreMataMataLocal();
+  await fetch(URL_SISTEMA_CHAVAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
+  });
+}
+
+// O resto das funções administrativas conectadas à nuvem...
 async function publicarPremioSemSortear() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   if (!itemInput) return;
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "anunciarBrindeFase", item: itemInput }) });
   alert("Prêmio anunciado!");
+  sincronizarDadosGeraisTorneio();
 }
 
 async function dispararSorteioBrinde() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
   document.getElementById('input-nome-premio').value = "";
+  sincronizarDadosGeraisTorneio();
 }
 
 async function resetarDadosMaster(tipoReset) {
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
   alert("Reset concluído!");
+  sincronizarDadosGeraisTorneio();
 }
 
-function resetarTorneioLocal() {
-  if (confirm("Deseja apagar a árvore e reiniciar o campeonato local?")) {
+async function resetarTorneioLocal() {
+  if (confirm("Deseja apagar a árvore e reiniciar o campeonato sincronizado na Nuvem?")) {
     confrontosAtivos = [];
-    localStorage.removeItem('ChavesLocaisData');
-    renderizarArvoreMataMataLocal();
+    await fetch(URL_SISTEMA_CHAVAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: "" })
+    });
+    sincronizarDadosGeraisTorneio();
   }
 }
 
@@ -491,6 +619,7 @@ function fazerLogout() {
   localStorage.removeItem('SessionTournament');
   location.reload();
 }
+  
 </script>
 </body>
 </html>
