@@ -43,46 +43,12 @@
       box-sizing: border-box; 
     }
 
-    #main-screen.container {
-      max-width: 600px;
-    }
-
-    h1 { 
-      color: var(--azul-neon); 
-      text-transform: uppercase; 
-      letter-spacing: 2px; 
-      text-shadow: 2px 2px #000, 0 0 10px rgba(0, 191, 255, 0.6); 
-      font-size: 1.4rem; 
-      margin-top: 5px;
-    } 
-
-    .tab-buttons { 
-      display: flex; 
-      background: var(--azul-arena);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 25px;
-      border: 1px solid var(--azul-neon);
-    } 
-
-    .tab-btn {
-      flex: 1; 
-      background: transparent; 
-      border: none; 
-      color: #aebac7; 
-      padding: 14px; 
-      font-weight: bold; 
-      font-size: 0.75rem;
-      text-transform: uppercase; 
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .tab-btn.active {
-      background: var(--azul-neon);
-      color: white;
-      text-shadow: 1px 1px 2px black;
-    }
+    #main-screen.container { max-width: 600px; }
+    h1 { color: var(--azul-neon); text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px #000, 0 0 10px rgba(0, 191, 255, 0.6); font-size: 1.4rem; margin-top: 5px; } 
+    .tab-buttons { display: flex; background: var(--azul-arena); border-radius: 8px; overflow: hidden; margin-bottom: 25px; border: 1px solid var(--azul-neon); } 
+    
+    .tab-btn { flex: 1; background: transparent; border: none; color: #aebac7; padding: 14px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+    .tab-btn.active { background: var(--azul-neon); color: white; text-shadow: 1px 1px 2px black; }
 
     .input-group { margin: 15px 0; text-align: left; } 
     label { display: block; color: #e5e9f0; margin-bottom: 5px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; } 
@@ -90,7 +56,7 @@
     input:focus { border-color: var(--azul-neon); box-shadow: 0 0 8px rgba(0, 191, 255, 0.5); outline: none; } 
     
     .btn-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .btn-sub { padding: 14px; font-size: 0.75rem; font-weight: bold; color: white; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: 0.2s; text-shadow: 1px 1px 2px black; box-sizing: border-box; border: 1px solid var(--azul-neon); }
+    .btn-sub { padding: 14px; font-size: 0.75rem; font-weight: bold; color: white; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: 0.2s; text-shadow: 1px 1px 2px black; border: 1px solid var(--azul-neon); }
     
     .fase-secao { text-align: left; margin-top: 25px; }
     .fase-header { color: var(--amarelo-campeao); font-size: 0.85rem; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid rgba(0, 191, 255, 0.2); padding-bottom: 6px; margin-bottom: 10px; letter-spacing: 1px; }
@@ -101,7 +67,6 @@
     .linha-treinador.winner { color: var(--amarelo-campeao); font-weight: bold; }
     
     .btn-vitoria { background: #00cc88; border: none; color: white; padding: 6px 10px; font-size: 0.65rem; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-
     .urna-box { background: rgba(2, 8, 19, 0.8); border: 2px dashed var(--azul-neon); padding: 20px; border-radius: 10px; margin-top: 15px; }
     .premio-titulo { font-size: 1.1rem; color: var(--amarelo-campeao); font-weight: bold; text-shadow: 0 0 10px rgba(255, 222, 0, 0.3); margin-bottom: 5px; }
     .ganhador-nome { font-size: 1.6rem; color: #fff; font-weight: 900; text-shadow: 0 0 15px var(--azul-neon); margin: 15px 0; letter-spacing: 1px; }
@@ -112,7 +77,7 @@
 </head>
 <body>
 
-  <!-- TELA 1: AUTENTICAÇÃO -->
+  <!-- TELA 1: LOGIN -->
   <div id="auth-screen" class="container">
     <img src="icone-sorteio.png" alt="Logo Tournament" style="width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--azul-neon); box-shadow: 0 0 15px var(--azul-neon); margin-bottom: 12px; background-color: var(--fundo-escuro); object-fit: cover;">
     <h1>Champions Tournament</h1>
@@ -188,6 +153,7 @@
 
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
+
 <script>
 const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
 let loopMonitoramento = null;
@@ -231,7 +197,7 @@ async function registrarInscricao(tipoAtividade) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, deck: timeDigitado, escopo: tipoAtividade })
     });
-    const dadosServidor = await resposta.json();
+    const dadosServidor = await response.json();
 
     if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
       informacoesJogadorLogado = { nome, senha };
@@ -281,103 +247,100 @@ async function sincronizarDadosGeraisTorneio() {
     }
   } catch (e) { console.warn("Aviso na sincronização."); }
 }
-// --- CADASTRO E GERADOR DE CHAVES COMPLETAMENTE INDEPENDENTE DA PLANILHA ---
-function gerarChaveamentoLocal() {
-  // Coleta a lista de jogadores cadastrados no sistema local do app
-  let lista = [...competidoresLocais];
-
-  if (lista.length < 2) {
-    alert("Nenhum competidor inscrito de forma oficial ainda! Adicione jogadores no botão para testar ou iniciar.");
-    return;
-  }
-
-  if (confirm("Deseja fechar as inscrições e gerar a árvore eliminatória oficial agora?")) {
-    // Algoritmo Fisher-Yates de embaralhamento seguro local no navegador
-    for (let i = lista.length - 1; i > 0; i--) {
-      let j = Math.floor(Math.random() * (i + 1));
-      let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
-    }
-
-    let n = lista.length;
-    let potencia = 2;
-    while (potencia < n) potencia *= 2;
-
-    let byesCount = potencia - n;
-    let reaisCount = n - byesCount;
-    let partidasCount = reaisCount / 2;
-
-    let jogamR1 = lista.slice(0, reaisCount);
-    let ganhamBye = lista.slice(reaisCount);
-
-    confrontosAtivos = [];
-
-    // Define de forma limpa os rótulos de eSports na tela
-    let nomeFase1 = "Rodada Inicial";
-    if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
-    else if (potencia === 16) nomeFase1 = "Oitavas de Final";
-    else if (potencia === 8) nomeFase1 = "Quartas de Final";
-
-    // 1. Escreve os confrontos reais da Rodada 1
-    for (let m = 0; m < partidasCount; m++) {
-      confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
-    }
-    
-    // 2. Escreve os avanços automáticos (BYEs) da Rodada 1
-    for (let b = 0; b < ganhamBye.length; b++) {
-      confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
-    }
-
-    // 3. Montagem fixa e decrescente por metades exatas das fases futuras
-    let vagasFaseSeguinte = potencia / 2;
-    let numeroFaseContador = 2;
-
-    while (vagasFaseSeguinte >= 1) {
-      let nomeFaseLabel = "Fase " + numeroFaseContador;
-      if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
-      if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
-      if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
-      if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
-      if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
-
-      for (let x = 0; x < vagasFaseSeguinte; x++) {
-        confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+async function gerarChaveamentoLocal() {
+  if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
+    try {
+      const resp = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterListaInscritosReais`);
+      const payloadInscritos = await resp.json();
+      
+      if(!payloadInscritos.lista || payloadInscritos.lista.length === 0) {
+        alert("Nenhum competidor cadastrado na planilha ainda!");
+        return;
       }
-      vagasFaseSeguinte = vagasFaseSeguinte / 2;
-      numeroFaseContador++;
-    }
+      
+      let lista = [...payloadInscritos.lista];
+      for (let i = lista.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
+      }
 
-    // Avança de forma instantânea os BYEs iniciais para os nexos da Fase 2
-    ganhamBye.forEach((jogador, b) => {
-      let fakeId = "F1-B" + (b + 1);
-      avançarJogadorNaArvoreLocal(fakeId, jogador);
-    });
+      let n = lista.length;
+      let potencia = 2;
+      while (potencia < n) potencia *= 2;
 
-    salvarEAtualizarChavesAtivas();
+      let byesCount = potencia - n;
+      let reaisCount = n - byesCount;
+      let partidasCount = reaisCount / 2;
+
+      let jogamR1 = lista.slice(0, reaisCount);
+      let ganhamBye = lista.slice(reaisCount);
+
+      confrontosAtivos = [];
+      let nomeFase1 = "Rodada Inicial";
+      if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
+      else if (potencia === 16) nomeFase1 = "Oitavas de Final";
+      else if (potencia === 8) nomeFase1 = "Quartas de Final";
+
+      // 1. Cria as partidas reais do Round 1 (ID: F1-MXX)
+      for (let m = 0; m < partidasCount; m++) {
+        confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
+      }
+      
+      // 2. Cria os cards de isenção inicial (ID: F1-BXX)
+      for (let b = 0; b < ganhamBye.length; b++) {
+        confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
+      }
+
+      // 3. Montagem fixa por divisões exatas de metades de chaves futuras
+      let vagasFaseSeguinte = potencia / 2;
+      let numeroFaseContador = 2;
+
+      while (vagasFaseSeguinte >= 1) {
+        let nomeFaseLabel = "Fase " + numeroFaseContador;
+        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
+        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
+        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
+        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
+        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
+
+        for (let x = 0; x < vagasFaseSeguinte; x++) {
+          confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+        }
+        vagasFaseSeguinte = vagasFaseSeguinte / 2;
+        numeroFaseContador++;
+      }
+
+      // Desativa e avança os BYEs de forma instantânea para os nexos da fase seguinte
+      ganhamBye.forEach((jogador, b) => {
+        let fakeId = "F1-B" + (b + 1);
+        avançarJogadorNaArvoreLocal(fakeId, jogador);
+      });
+
+      await enviarChavesParaNuvem();
+    } catch(err) { alert("Erro ao carregar inscritos da planilha."); }
   }
 }
-// --- MOTOR DE AVANÇO 100% LOCAL POR DIVISÃO MATEMÁTICA ---
+
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   let partes = idDuelo.split("-");
   if (partes.length < 2) return;
 
-  // Isola os números puros da Fase e da Partida usando Regex
   let faseAtual = parseInt(partes[0].replace(/[^0-9]/g, ""));
   let numeroMatch = parseInt(partes[1].replace(/[^0-9]/g, ""));
   if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
 
   let proximaFase = faseAtual + 1;
   let proximoMatchIndex = Math.ceil(numeroMatch / 2);
-  let ehSlot1 = (numeroMatch % 2 !== 0); // Ímpar vai para o J1, par vai para o J2
+  let ehSlot1 = (numeroMatch % 2 !== 0);
 
   let idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
 
-  // Atualiza o slot correto na memória do navegador na mesma hora, sem delay
   confrontosAtivos.forEach(match => {
     if (match.id === idAlvo) {
       if (ehSlot1) match.j1 = nomeVencedor;
       else match.j2 = nomeVencedor;
       
-      // Avanço automático em cadeia caso o oponente do próximo card seja um "BYE"
+      // Detecção de BYEs em fases avançadas (auto-avanço em cadeia)
       if (match.j1 === "BYE" || match.j2 === "BYE") {
         let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
         if (proxVencedor !== "Aguardando...") {
@@ -389,25 +352,31 @@ function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   });
 }
 
-// Executa o relatório de vitória instantâneo
-function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (confirm("Confirma o registro de vitória para " + nomeVencedor + "?")) {
+async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (confirm("Confirma seu reporte de vitória no Set?")) {
     confrontosAtivos.forEach(match => {
       if (match.id === idDuelo) {
         match.vencedor = nomeVencedor;
         avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
       }
     });
-    salvarEAtualizarChavesAtivas();
+    await enviarChavesParaNuvem();
   }
 }
 
-// --- RENDERIZADOR LOCAL: Limpa a tela antes de desenhar e impede duplicações ---
+async function enviarChavesParaNuvem() {
+  renderizarArvoreMataMataLocal();
+  await fetch(URL_SISTEMA_CHAVAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
+  });
+}
+
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
 
-  // Zera a tela visual obrigatoriamente para não duplicar nada a cada ciclo
   container.innerHTML = "";
 
   if (!confrontosAtivos || confrontosAtivos.length === 0) {
@@ -418,13 +387,10 @@ function renderizarArvoreMataMataLocal() {
   let nomeCampeaoSupremo = "";
   if (confrontosAtivos.length > 0) {
     let ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
-    if (ultimoMatch && ultimoMatch.vencedor && ultimoMatch.vencedor !== "") {
-      nomeCampeaoSupremo = ultimoMatch.vencedor;
-    }
+    if (ultimoMatch && ultimoMatch.vencedor && ultimoMatch.vencedor !== "") { nomeCampeaoSupremo = ultimoMatch.vencedor; }
   }
 
   let html = "";
-  // Exibe o painel de Pódio Dourado Luminoso ao coroar o Campeão
   if (nomeCampeaoSupremo !== "") {
     html += `
       <div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite; text-align: center;">
@@ -446,14 +412,11 @@ function renderizarArvoreMataMataLocal() {
   for (const fase in agrupamento) {
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
     agrupamento[fase].forEach(match => {
-      if (match.j2 === "BYE") return; // Oculta os cards isolados de isenção inicial
-      
+      if (match.j2 === "BYE") return;
       const isW1 = match.vencedor && match.vencedor === match.j1;
       const isW2 = match.vencedor && match.vencedor === match.j2;
-      
       const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
       const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
-      
       const eDono1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j1;
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
@@ -477,47 +440,28 @@ function renderizarArvoreMataMataLocal() {
   container.innerHTML = html;
 }
 
-function salvarEAtualizarChavesAtivas() {
-  localStorage.setItem('ChavesLocaisData', JSON.stringify(confrontosAtivos));
-  renderizarArvoreMataMataLocal();
-}
-
-// Sincroniza apenas a Urna de Sorteios vinda do Google Sheets
-async function sincronizarUrnaApenas() {
-  try {
-    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
-    const payload = await resposta.json();
-    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
-    if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
-  } catch (e) {}
-}
-
 async function publicarPremioSemSortear() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   if (!itemInput) return;
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "anunciarBrindeFase", item: itemInput }) });
   alert("Prêmio anunciado!");
 }
-
 async function dispararSorteioBrinde() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
   document.getElementById('input-nome-premio').value = "";
 }
-
 async function resetarDadosMaster(tipoReset) {
   await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
   alert("Reset concluído!");
 }
-
-function resetarTorneioLocal() {
-  if (confirm("Deseja apagar a árvore e reiniciar o campeonato local?")) {
+async function resetarTorneioLocal() {
+  if (confirm("Deseja apagar a árvore e reiniciar o campeonato sincronizado na nuvem?")) {
     confrontosAtivos = [];
-    localStorage.removeItem('ChavesLocaisData');
-    renderizarArvoreMataMataLocal();
+    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: "" }) });
+    sincronizarDadosGeraisTorneio();
   }
 }
-
 function fazerLogout() { localStorage.removeItem('SessionTournament'); location.reload(); }
 
 const estiloPulse = document.createElement('style');
