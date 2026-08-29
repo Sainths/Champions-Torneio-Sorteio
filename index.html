@@ -374,8 +374,12 @@ function renderizarArvoreMataMataLocal() {
       
       const isW1 = match.vencedor && match.vencedor === match.j1;
       const isW2 = match.vencedor && match.vencedor === match.j2;
+     // LINHA ATUALIZADA (Jogadores só veem o seu card, Juízes veem TODOS os botões para testar/organizar)
+      const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
+      const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
+
       const pertence = informacoesJogadorLogado && (informacoesJogadorLogado.nome === match.j1 || informacoesJogadorLogado.nome === match.j2);
-      const mostrarBtn = pertence && !match.vencedor && match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
+      const mostrarBtn = (pertence || ehJuiz) && !match.vencedor && match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
       html += `
         <div class="card-duelo">
