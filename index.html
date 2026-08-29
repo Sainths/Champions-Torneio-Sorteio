@@ -351,6 +351,7 @@ function reportarVitoriaDireta(idDuelo, nomeVencedor) {
   }
 }
 
+// --- RENDERIZADOR DE ÁRVORE COM DOIS BOTÕES INDIVIDUAIS DE VITÓRIA ---
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -370,29 +371,47 @@ function renderizarArvoreMataMataLocal() {
   for (const fase in agrupamento) {
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
     agrupamento[fase].forEach(match => {
-      if (match.j2 === "BYE") return; // Oculta o card isolado de isenção para limpar o visual
+      if (match.j2 === "BYE") return; // Oculta os cards de BYE isolados
       
       const isW1 = match.vencedor && match.vencedor === match.j1;
       const isW2 = match.vencedor && match.vencedor === match.j2;
-     // LINHA ATUALIZADA (Jogadores só veem o seu card, Juízes veem TODOS os botões para testar/organizar)
+      
       const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
       const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
 
-      const pertence = informacoesJogadorLogado && (informacoesJogadorLogado.nome === match.j1 || informacoesJogadorLogado.nome === match.j2);
-      const mostrarBtn = (pertence || ehJuiz) && !match.vencedor && match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
+      // Trava de exibição para os competidores comuns reais
+      const eDonoJ1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j1;
+      const eDonoJ2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
+
+      // Os botões só aparecem se a partida não estiver em "Aguardando..."
+      const partidaPronta = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
       html += `
-        <div class="card-duelo">
-          <div class="duelistas-nomes">
-            <div class="linha-treinador ${isW1 ? 'winner' : ''}">🏃 ${match.j1} ${isW1 ? '🏆' : ''}</div>
-            <div class="linha-treinador ${isW2 ? 'winner' : ''}">🏃 ${match.j2} ${isW2 ? '🏆' : ''}</div>
+        <div class="card-duelo" style="margin-bottom: 15px;">
+          <div class="duelistas-nomes" style="flex: 1;">
+            <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>🏃 ${match.j1} ${isW1 ? '🏆' : ''}</span>
+              ${(mostrarBotaoVitoriaJuizOuPlayer(ehJuiz, eDonoJ1, match.vencedor, partidaPronta)) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j1}')" class="btn-vitoria" style="background:#00cc88;">Venceu</button>` : ""}
+            </div>
+            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>🏃 ${match.j2} ${isW2 ? '🏆' : ''}</span>
+              ${(mostrarBotaoVitoriaJuizOuPlayer(ehJuiz, eDonoJ2, match.vencedor, partidaPronta)) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j2}')" class="btn-vitoria" style="background:#00cc88;">Venceu</button>` : ""}
+            </div>
           </div>
-          ${mostrarBtn ? `<button onclick="reportarVitoriaDireta('${match.id}', '${informacoesJogadorLogado.nome}')" class="btn-vitoria">🏆 Venci</button>` : ""}
         </div>`;
     });
     html += `</div>`;
   }
   container.innerHTML = html;
+}
+  
+// Função auxiliar de segurança para exibição de botões individuais
+function mostrarBotaoVitoriaJuizOuPlayer(ehJuiz, eDono, vencedorAtual, pronto) {
+  if (!pronto) return false;
+  // Se for juiz, o botão SEMPRE aparece (permitindo corrigir resultados mesmo que já tenha vencedor)
+  if (ehJuiz) return true;
+  // Se for jogador comum, só aparece no seu próprio card e se a partida ainda não tiver resultado gravado
+  return eDono && !vencedorAtual;
 }
 
 function salvarEAtualizarChavesAtivas() {
