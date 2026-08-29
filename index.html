@@ -281,128 +281,103 @@ async function sincronizarDadosGeraisTorneio() {
     }
   } catch (e) { console.warn("Aviso na sincronização."); }
 }
-// --- NOVO GERADOR UNIVERSAL MATEMÁTICO: À prova de números quebrados (Ex: 17 jogadores) ---
-async function gerarChaveamentoLocal() {
-  if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
-    try {
-      const resp = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterListaInscritosReais`);
-      const payloadInscritos = await resp.json();
-      
-      if(!payloadInscritos.lista || payloadInscritos.lista.length === 0) {
-        alert("Nenhum competidor cadastrado na planilha ainda!");
-        return;
+// --- CADASTRO E GERADOR DE CHAVES COMPLETAMENTE INDEPENDENTE DA PLANILHA ---
+function gerarChaveamentoLocal() {
+  // Coleta a lista de jogadores cadastrados no sistema local do app
+  let lista = [...competidoresLocais];
+
+  if (lista.length < 2) {
+    alert("Nenhum competidor inscrito de forma oficial ainda! Adicione jogadores no botão para testar ou iniciar.");
+    return;
+  }
+
+  if (confirm("Deseja fechar as inscrições e gerar a árvore eliminatória oficial agora?")) {
+    // Algoritmo Fisher-Yates de embaralhamento seguro local no navegador
+    for (let i = lista.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
+    }
+
+    let n = lista.length;
+    let potencia = 2;
+    while (potencia < n) potencia *= 2;
+
+    let byesCount = potencia - n;
+    let reaisCount = n - byesCount;
+    let partidasCount = reaisCount / 2;
+
+    let jogamR1 = lista.slice(0, reaisCount);
+    let ganhamBye = lista.slice(reaisCount);
+
+    confrontosAtivos = [];
+
+    // Define de forma limpa os rótulos de eSports na tela
+    let nomeFase1 = "Rodada Inicial";
+    if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
+    else if (potencia === 16) nomeFase1 = "Oitavas de Final";
+    else if (potencia === 8) nomeFase1 = "Quartas de Final";
+
+    // 1. Escreve os confrontos reais da Rodada 1
+    for (let m = 0; m < partidasCount; m++) {
+      confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
+    }
+    
+    // 2. Escreve os avanços automáticos (BYEs) da Rodada 1
+    for (let b = 0; b < ganhamBye.length; b++) {
+      confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
+    }
+
+    // 3. Montagem fixa e decrescente por metades exatas das fases futuras
+    let vagasFaseSeguinte = potencia / 2;
+    let numeroFaseContador = 2;
+
+    while (vagasFaseSeguinte >= 1) {
+      let nomeFaseLabel = "Fase " + numeroFaseContador;
+      if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
+      if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
+      if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
+      if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
+      if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
+
+      for (let x = 0; x < vagasFaseSeguinte; x++) {
+        confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
       }
-      
-      // Limpa a lista trazendo apenas os nicks válidos da Coluna A
-      let lista = payloadInscritos.lista.map(linha => {
-        let colunas = linha.split(",");
-        return colunas && colunas[0] ? colunas[0].toString().trim() : "";
-      }).filter(nome => nome !== "" && nome.toLowerCase() !== "nome");
+      vagasFaseSeguinte = vagasFaseSeguinte / 2;
+      numeroFaseContador++;
+    }
 
-      if (lista.length < 2) {
-        alert("Quantidade de competidores insuficiente para gerar chaves!");
-        return;
-      }
+    // Avança de forma instantânea os BYEs iniciais para os nexos da Fase 2
+    ganhamBye.forEach((jogador, b) => {
+      let fakeId = "F1-B" + (b + 1);
+      avançarJogadorNaArvoreLocal(fakeId, jogador);
+    });
 
-      // Embaralhamento seguro
-      for (let i = lista.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
-      }
-
-      let n = lista.length;
-      let potencia = 2;
-      while (potencia < n) potencia *= 2;
-
-      let byesCount = potencia - n;
-      let reaisCount = n - byesCount;
-      let partidasCount = reaisCount / 2;
-
-      let jogamR1 = lista.slice(0, reaisCount);
-      let ganhamBye = lista.slice(reaisCount);
-
-      confrontosAtivos = [];
-
-      // Determina o nome da primeira fase na tela de forma amigável
-      let nomeFase1 = "Rodada Inicial";
-      if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
-      else if (potencia === 16) nomeFase1 = "Oitavas de Final";
-      else if (potencia === 8) nomeFase1 = "Quartas de Final";
-
-      // 1. Monta as partidas reais do Round 1 (ID: F1-MXX)
-      for (let m = 0; m < partidasCount; m++) {
-        confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
-      }
-      
-      // 2. Monta as isenções do Round 1 (ID: F1-BYE-XX)
-      for (let b = 0; b < ganhamBye.length; b++) {
-        confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
-      }
-
-      // 3. CRIAÇÃO DINÂMICA DAS PRÓXIMAS FASES REDUZINDO EXATAMENTE POR METADE (Sem pular e sem travar)
-      let vagasFaseSeguinte = potencia / 2;
-      let numeroFaseContador = 2;
-
-      while (vagasFaseSeguinte >= 1) {
-        let nomeFaseLabel = "Fase " + numeroFaseContador;
-        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
-        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
-        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
-
-        for (let x = 0; x < vagasFaseSeguinte; x++) {
-          confrontosAtivos.push({ 
-            id: "F" + numeroFaseContador + "-M" + (x + 1), 
-            fase: nomeFaseLabel, 
-            j1: "Aguardando...", 
-            j2: "Aguardando...", 
-            vencedor: "" 
-          });
-        }
-        vagasFaseSeguinte = vagasFaseSeguinte / 2;
-        numeroFaseContador++;
-      }
-
-      // Processa os avanços automáticos imediatos de quem ganhou BYE para a Fase 2 de forma cirúrgica
-      ganhamBye.forEach((jogador, b) => {
-        let fakeId = "F1-B" + (b + 1);
-        avançarJogadorNaArvoreLocal(fakeId, jogador);
-      });
-
-      await enviarChavesParaNuvem();
-    } catch(err) { alert("Erro ao processar chaveamento dinâmico."); }
+    salvarEAtualizarChavesAtivas();
   }
 }
-// --- MOTOR DE AVANÇO NUMÉRICO UNIVERSAL POR DIVISÃO EXTRAÍDA VIA REGEX ---
+// --- MOTOR DE AVANÇO 100% LOCAL POR DIVISÃO MATEMÁTICA ---
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
-  // Separa o prefixo da fase do número do confronto (Ex: "F1-M5" vira ["F1", "M5"])
   let partes = idDuelo.split("-");
   if (partes.length < 2) return;
 
-  // Extrai apenas os números usando expressão regular estrita (Ex: "F1" vira 1, "M5" ou "B5" vira 5)
+  // Isola os números puros da Fase e da Partida usando Regex
   let faseAtual = parseInt(partes[0].replace(/[^0-9]/g, ""));
   let numeroMatch = parseInt(partes[1].replace(/[^0-9]/g, ""));
   if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
 
-  // Determina o destino: avança rigidamente para a fase seguinte (+1)
   let proximaFase = faseAtual + 1;
   let proximoMatchIndex = Math.ceil(numeroMatch / 2);
-  let ehSlot1 = (numeroMatch % 2 !== 0); // Ímpar vai para o primeiro slot (J1), par vai para o segundo (J2)
+  let ehSlot1 = (numeroMatch % 2 !== 0); // Ímpar vai para o J1, par vai para o J2
 
-  // Monta a ID exata do card de espera na fase superior (Ex: "F2-M3")
   let idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
 
-  // Varre a memória local procurando o card destino e injeta o nome do vencedor na vaga certa
+  // Atualiza o slot correto na memória do navegador na mesma hora, sem delay
   confrontosAtivos.forEach(match => {
     if (match.id === idAlvo) {
-      if (ehSlot1) {
-        match.j1 = nomeVencedor;
-      } else {
-        match.j2 = nomeVencedor;
-      }
+      if (ehSlot1) match.j1 = nomeVencedor;
+      else match.j2 = nomeVencedor;
       
-      // GATILHO RECURSIVO EM CADEIA: Se a vaga que acabou de ser preenchida tiver como oponente um "BYE", avança o jogador novamente
+      // Avanço automático em cadeia caso o oponente do próximo card seja um "BYE"
       if (match.j1 === "BYE" || match.j2 === "BYE") {
         let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
         if (proxVencedor !== "Aguardando...") {
@@ -414,32 +389,33 @@ function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   });
 }
 
-async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (confirm("Confirma seu reporte de vitória no Set?")) {
+// Executa o relatório de vitória instantâneo
+function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (confirm("Confirma o registro de vitória para " + nomeVencedor + "?")) {
     confrontosAtivos.forEach(match => {
       if (match.id === idDuelo) {
         match.vencedor = nomeVencedor;
         avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
       }
     });
-    await enviarChavesParaNuvem();
+    salvarEAtualizarChavesAtivas();
   }
 }
 
-async function enviarChavesParaNuvem() {
-  renderizarArvoreMataMataLocal();
-  await fetch(URL_SISTEMA_CHAVAS, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
-  });
-}
+// --- RENDERIZADOR LOCAL: Limpa a tela antes de desenhar e impede duplicações ---
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
 
+  // Zera a tela visual obrigatoriamente para não duplicar nada a cada ciclo
+  container.innerHTML = "";
+
+  if (!confrontosAtivos || confrontosAtivos.length === 0) {
+    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
+    return;
+  }
+
   let nomeCampeaoSupremo = "";
-  // Localiza dinamicamente se o último card da árvore já foi preenchido e decidido
   if (confrontosAtivos.length > 0) {
     let ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
     if (ultimoMatch && ultimoMatch.vencedor && ultimoMatch.vencedor !== "") {
@@ -448,7 +424,7 @@ function renderizarArvoreMataMataLocal() {
   }
 
   let html = "";
-  // Painel de pódio dourado glorioso que brota no topo das chaves ao finalizar o torneio
+  // Exibe o painel de Pódio Dourado Luminoso ao coroar o Campeão
   if (nomeCampeaoSupremo !== "") {
     html += `
       <div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite; text-align: center;">
@@ -461,14 +437,16 @@ function renderizarArvoreMataMataLocal() {
 
   let agrupamento = {};
   confrontosAtivos.forEach(m => {
-    if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
-    agrupamento[m.fase].push(m);
+    if (m && m.fase) {
+      if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
+      agrupamento[m.fase].push(m);
+    }
   });
 
   for (const fase in agrupamento) {
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
     agrupamento[fase].forEach(match => {
-      if (match.j2 === "BYE") return; // Limpa o feed ocultando os cards isolados de isenção inicial
+      if (match.j2 === "BYE") return; // Oculta os cards isolados de isenção inicial
       
       const isW1 = match.vencedor && match.vencedor === match.j1;
       const isW2 = match.vencedor && match.vencedor === match.j2;
@@ -499,6 +477,21 @@ function renderizarArvoreMataMataLocal() {
   container.innerHTML = html;
 }
 
+function salvarEAtualizarChavesAtivas() {
+  localStorage.setItem('ChavesLocaisData', JSON.stringify(confrontosAtivos));
+  renderizarArvoreMataMataLocal();
+}
+
+// Sincroniza apenas a Urna de Sorteios vinda do Google Sheets
+async function sincronizarUrnaApenas() {
+  try {
+    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
+    const payload = await resposta.json();
+    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
+    if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
+  } catch (e) {}
+}
+
 async function publicarPremioSemSortear() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   if (!itemInput) return;
@@ -517,11 +510,11 @@ async function resetarDadosMaster(tipoReset) {
   alert("Reset concluído!");
 }
 
-async function resetarTorneioLocal() {
-  if (confirm("Deseja apagar a árvore e reiniciar o campeonato sincronizado na nuvem?")) {
+function resetarTorneioLocal() {
+  if (confirm("Deseja apagar a árvore e reiniciar o campeonato local?")) {
     confrontosAtivos = [];
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: "" }) });
-    sincronizarDadosGeraisTorneio();
+    localStorage.removeItem('ChavesLocaisData');
+    renderizarArvoreMataMataLocal();
   }
 }
 
@@ -530,7 +523,6 @@ function fazerLogout() { localStorage.removeItem('SessionTournament'); location.
 const estiloPulse = document.createElement('style');
 estiloPulse.innerHTML = `@keyframes pulse { 0% { box-shadow: 0 0 15px rgba(255,222,0,0.4); } 50% { box-shadow: 0 0 25px rgba(255,222,0,0.7); } 100% { box-shadow: 0 0 15px rgba(255,222,0,0.4); } }`;
 document.head.appendChild(estiloPulse);
-  
 </script>
 </body>
 </html>
