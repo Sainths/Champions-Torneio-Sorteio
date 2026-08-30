@@ -406,7 +406,7 @@ function renderizarArvoreMataMataLocal() {
             </div>
             <div class="linha-treinador ${isW2 ? 'winner' : ''}">
               <span>🏃 ${match.j2} ${isW2 ? '🏆' : ''}</span>
-              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta(${match.id}', '${match.j2}')" class="btn-vitoria">Venceu</button>` : ""}
+              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta(${match.id}, '${match.j2}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
           </div>
         </div>`;
