@@ -172,6 +172,39 @@ window.onload = () => {
   }
 };
 
+// --- FUNÇÃO AUXILIAR: Identifica links do Showdown/Pokepaste e cria o botão clicável ---
+function formatarColunaTimeComLink(textoTime) {
+  if (!textoTime || textoTime.trim() === "" || textoTime.trim() === "Aguardando..." || textoTime.trim() === "BYE") return "";
+  
+  var textoLimpo = textoTime.toString().trim();
+  
+  // Verifica se o texto é um link legítimo do competitivo Showdown ou Pokepaste
+  if (textoLimpo.startsWith("http://") || textoLimpo.startsWith("https://") || textoLimpo.includes("pokepaste") || textoLimpo.includes("showdown")) {
+    return `
+      <a href="${textoLimpo}" target="_blank" rel="noopener noreferrer" style="
+        display: inline-block;
+        background: linear-gradient(to bottom, #00bfff, #0a2e5c);
+        color: white;
+        text-decoration: none;
+        padding: 3px 6px;
+        font-size: 0.6rem;
+        font-weight: bold;
+        border-radius: 3px;
+        text-transform: uppercase;
+        border: 1px solid #00bfff;
+        margin-left: 6px;
+        cursor: pointer;
+      ">📋 Lista</a>
+    `;
+  }
+  
+  // Se não for link (como o nick do jogador), não exibe botão extra
+  return "";
+}
+
+// Banco de dados local para guardar temporariamente os times (evita quebra de layout)
+let timesMapeadosPorTreinador = {};
+
 function trocarAbaVisual(idAbaAlvo) {
   document.querySelectorAll('.tab-content').forEach(aba => aba.classList.add('hidden'));
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -238,6 +271,14 @@ async function sincronizarDadosGeraisTorneio() {
     if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
     if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
     
+    // Mapeia os times/links dos jogadores vindos da planilha para a memória local
+    if (payload.listaInscritosComTimes) {
+      timesMapeadosPorTreinador = {};
+      payload.listaInscritosComTimes.forEach(inf => {
+        if (inf.nome) timesMapeadosPorTreinador[inf.nome.toString().trim().toLowerCase()] = inf.time || "";
+      });
+    }
+
     if (payload.chavesNuvem && payload.chavesNuvem.length > 0) {
       confrontosAtivos = payload.chavesNuvem;
       renderizarArvoreMataMataLocal();
@@ -339,6 +380,7 @@ async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
 }
 
 // RENDERIZAÇÃO LIMPA: Agrupa e desenha na tela apenas as partidas úteis para os jogadores
+// RENDERIZAÇÃO LIMPA: Agrupa e desenha na tela apenas as partidas úteis para os jogadores
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -378,14 +420,12 @@ function renderizarArvoreMataMataLocal() {
   });
 
   for (const fase in agrupamento) {
-    // Só renderiza a seção na tela se houver partidas válidas (esconde rodadas que viraram BYE por completo)
     let contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
     if (!contemPartidaValida) continue;
 
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
     
     agrupamento[fase].forEach(match => {
-      // Esconde do fluxo visual confrontos fantasias contra o BYE para não confundir a leitura dos jogadores
       if (match.j1 === "BYE" || match.j2 === "BYE") return;
 
       const isW1 = match.vencedor && match.vencedor === match.j1;
@@ -396,17 +436,20 @@ function renderizarArvoreMataMataLocal() {
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
-      // SEGURANÇA: Mostra apenas o nick limpo e o botão para declarar a vitória
+      // Busca os links de cada jogador na tabela local para acionar o formatador
+      let t1 = timesMapeadosPorTreinador[match.j1.toString().toLowerCase()] || "";
+      let t2 = timesMapeadosPorTreinador[match.j2.toString().toLowerCase()] || "";
+
       html += `
         <div class="card-duelo" style="margin-bottom: 15px;">
           <div class="duelistas-nomes" style="flex: 1;">
-            <div class="linha-treinador ${isW1 ? 'winner' : ''}">
-              <span>🏃 ${match.j1} ${isW1 ? '🏆' : ''}</span>
-              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta(${match.id}, '${match.j1}')" class="btn-vitoria">Venceu</button>` : ""}
+            <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="display: flex; align-items: center;">🏃 ${match.j1} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
+              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j1}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
-            <div class="linha-treinador ${isW2 ? 'winner' : ''}">
-              <span>🏃 ${match.j2} ${isW2 ? '🏆' : ''}</span>
-              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta(${match.id}, '${match.j2}')" class="btn-vitoria">Venceu</button>` : ""}
+            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center;">🏃 ${match.j2} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
+              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j2}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
           </div>
         </div>`;
