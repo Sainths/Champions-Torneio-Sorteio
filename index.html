@@ -419,6 +419,7 @@ function renderizarArvoreMataMataLocal() {
     }
   });
 
+  // --- COPIE E SUBSTITUA DAQUI ATÉ O FINAL DO SEU ARQUIVO ---
   for (const fase in agrupamento) {
     let contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
     if (!contemPartidaValida) continue;
@@ -436,7 +437,6 @@ function renderizarArvoreMataMataLocal() {
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
-      // Busca os links de cada jogador na tabela local para acionar o formatador
       let t1 = timesMapeadosPorTreinador[match.j1.toString().toLowerCase()] || "";
       let t2 = timesMapeadosPorTreinador[match.j2.toString().toLowerCase()] || "";
 
@@ -458,7 +458,7 @@ function renderizarArvoreMataMataLocal() {
   }
   container.innerHTML = html;
 }
-
+  
 async function publicarPremioSemSortear() {
   const itemInput = document.getElementById('input-nome-premio').value.trim();
   if (!itemInput) return;
