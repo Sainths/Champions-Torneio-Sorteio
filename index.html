@@ -356,6 +356,8 @@ function avançarJogadorNaArvoreLocal(idJogoAtual, nomeVencedor) {
   }
 }
 
+// --- COPIE E SUBSTITUA ESTE BLOCO NO SEU GITHUB ---
+
 // Salva o estado atual das chaves de volta no banco de dados na planilha
 async function enviarChavesParaNuvem() {
   renderizarArvoreMataMataLocal();
@@ -366,11 +368,13 @@ async function enviarChavesParaNuvem() {
   });
 }
 
-// Modifica o vencedor do duelo clicado e inicia o processo de avanço
+// Modifica o vencedor do duelo clicado e inicia o processo de avanço (CORRIGIDO)
 async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (confirm("Confirma seu reporte de vitória no Set?")) {
+  if (!idDuelo || !nomeVencedor) return;
+  
+  if (confirm("Confirma seu reporte de vitória no Set para " + nomeVencedor + "?")) {
     confrontosAtivos.forEach(match => {
-      if (match.id === idDuelo) {
+      if (match.id && match.id.toString().trim() === idDuelo.toString().trim()) {
         match.vencedor = nomeVencedor;
         avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
       }
@@ -379,8 +383,7 @@ async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
   }
 }
 
-// RENDERIZAÇÃO LIMPA: Agrupa e desenha na tela apenas as partidas úteis para os jogadores
-// RENDERIZAÇÃO LIMPA: Agrupa e desenha na tela apenas as partidas úteis para os jogadores
+// RENDERIZAÇÃO LIMPA: Agrupa e desenha na tela as chaves síncronas com os links dos times
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -410,7 +413,7 @@ function renderizarArvoreMataMataLocal() {
       </div>`;
   }
 
-  // Agrupa os confrontos ativos de forma dinâmica usando os nomes das fases criadas pela planilha
+  // Agrupa os confrontos ativos usando os nomes das fases vindos da nuvem
   let agrupamento = {};
   confrontosAtivos.forEach(m => {
     if (m && m.fase) {
@@ -419,7 +422,6 @@ function renderizarArvoreMataMataLocal() {
     }
   });
 
-  // --- COPIE E SUBSTITUA DAQUI ATÉ O FINAL DO SEU ARQUIVO ---
   for (const fase in agrupamento) {
     let contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
     if (!contemPartidaValida) continue;
@@ -437,6 +439,7 @@ function renderizarArvoreMataMataLocal() {
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
+      // Resgata os links puros do banco local para carregar no botão
       let t1 = timesMapeadosPorTreinador[match.j1.toString().toLowerCase()] || "";
       let t2 = timesMapeadosPorTreinador[match.j2.toString().toLowerCase()] || "";
 
