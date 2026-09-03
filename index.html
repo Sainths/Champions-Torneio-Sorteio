@@ -314,25 +314,27 @@ async function gerarChaveamentoLocal() {
   }
 }
   
-// ENGINE CORRIGIDA: Avança o jogador vencedor mapeando de forma exata e linear o ID da próxima fase
+// ENGINE UNIVERSAL CORRIGIDA: Avança o jogador mapeando de forma exata os índices da lista
 function avançarJogadorNaArvoreLocal(idJogoAtual, nomeVencedor) {
-  // Descobre em qual índice do array a partida atual está localizada
-  let indexAtual = confrontosAtivos.findIndex(m => m.id === idJogoAtual);
+  if (!idJogoAtual || !nomeVencedor) return;
+
+  // Encontra a posição exata da partida que acabou de ser jogada no array
+  let indexAtual = confrontosAtivos.findIndex(m => m.id && m.id.toString().trim() === idJogoAtual.toString().trim());
   if (indexAtual === -1) return;
 
   let partidaAtual = confrontosAtivos[indexAtual];
   
-  // Filtra todas as partidas da mesma fase para sabermos a posição relativa deste jogo
+  // Agrupa as partidas da mesma fase para saber a ordem deste jogo (Se é o jogo 1, jogo 2, etc.)
   let partidasDaMesmaFase = confrontosAtivos.filter(m => m.fase === partidaAtual.fase);
   let posicaoRelativa = partidasDaMesmaFase.findIndex(m => m.id === idJogoAtual);
   
-  // Descobre a primeira partida da fase seguinte contando quantas partidas existem no total na fase atual
+  // Localiza onde começa a primeira partida da rodada seguinte na lista
   let indexPrimeiroJogoProximaFase = confrontosAtivos.findIndex(m => m.fase !== partidaAtual.fase && confrontosAtivos.indexOf(m) > indexAtual);
   
-  // Se não houver uma fase posterior, significa que esta já era a Grande Final
+  // Se não encontrar uma próxima fase, chegamos ao final do torneio
   if (indexPrimeiroJogoProximaFase === -1) return;
 
-  // Aplica a regra matemática: duas partidas alimentam um único card da fase seguinte
+  // Regra matemática: cada duas partidas da rodada anterior alimentam um único card da rodada seguinte
   let indiceDoJogoAlvo = indexPrimeiroJogoProximaFase + Math.floor(posicaoRelativa / 2);
   let ehSlotPrimeiro = (posicaoRelativa % 2 === 0);
 
@@ -343,8 +345,7 @@ function avançarJogadorNaArvoreLocal(idJogoAtual, nomeVencedor) {
       confrontosAtivos[indiceDoJogoAlvo].j2 = nomeVencedor;
     }
 
-    // REGRA DE CADEIA: Se a partida para onde ele avançou já contiver um "BYE" fantasma,
-    // ele se classifica automaticamente para a outra fase sem precisar esperar o juiz clicar
+    // REGRA DE CADEIA AUTOMÁTICA: Se o oponente da próxima fase for um "BYE", avança o jogador novamente
     let proximoMatch = confrontosAtivos[indiceDoJogoAlvo];
     if (proximoMatch.j1 === "BYE" || proximoMatch.j2 === "BYE") {
       let proxVencedor = proximoMatch.j1 === "BYE" ? proximoMatch.j2 : proximoMatch.j1;
@@ -355,8 +356,6 @@ function avançarJogadorNaArvoreLocal(idJogoAtual, nomeVencedor) {
     }
   }
 }
-
-// --- COPIE E SUBSTITUA ESTE BLOCO NO SEU GITHUB ---
 
 // Salva o estado atual das chaves de volta no banco de dados na planilha
 async function enviarChavesParaNuvem() {
