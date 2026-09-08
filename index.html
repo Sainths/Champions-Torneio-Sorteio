@@ -369,14 +369,19 @@ async function gerarChaveamentoLocal() {
   }
 }
 
-// --- MOTOR DE AVANÇO NUMÉRICO REVISADO: Impede quebra de slots de fases futuras ---
+// --- MOTOR DE AVANÇO NUMÉRICO REVISADO: Correção cirúrgica de extração de índices puros ---
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
+  if (!idDuelo || !nomeVencedor) return;
+  
   let partes = idDuelo.split("-");
   if (partes.length < 2) return;
 
-  // Extrai com precisão a fase e o número do card jogado
-  let faseAtual = parseInt(partes[0].replace(/[^0-9]/g, ""));
-  let numeroMatch = parseInt(partes[1].replace(/[^0-9]/g, ""));
+  // CORREÇÃO: Extrai os números usando as posições exatas [0] e [1] do array repartido
+  let faseTexto = partes[0].replace(/[^0-9]/g, "");
+  let matchTexto = partes[1].replace(/[^0-9]/g, "");
+  
+  let faseAtual = parseInt(faseTexto);
+  let numeroMatch = parseInt(matchTexto);
   if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
 
   let proximaFase = faseAtual + 1;
@@ -388,10 +393,13 @@ function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
 
   confrontosAtivos.forEach(match => {
     if (match.id && match.id.toString().trim() === idAlvo) {
-      if (ehSlot1) { match.j1 = nomeLimpoFiltrado; } 
-      else { match.j2 = nomeLimpoFiltrado; }
+      if (ehSlot1) { 
+        match.j1 = nomeLimpoFiltrado; 
+      } else { 
+        match.j2 = nomeLimpoFiltrado; 
+      }
       
-      // Tratamento recursivo em cadeia se o slot de destino tiver um BYE fantasma
+      // Auto-avanço em cadeia para rodadas superiores com BYE
       if (match.j1 === "BYE" || match.j2 === "BYE") {
         let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
         if (proxVencedor !== "Aguardando...") {
