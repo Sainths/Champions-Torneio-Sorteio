@@ -282,18 +282,29 @@ async function sincronizarDadosGeraisTorneio() {
   } catch (e) { console.warn("Aviso na sincronização."); }
 }
 
+// --- GERADOR MATEMÁTICO INTEGRAL: Cria apenas os slots estritamente necessários ---
 async function gerarChaveamentoLocal() {
   if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
     try {
       const resp = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterListaInscritosReais`);
       const payloadInscritos = await resp.json();
       
-      if(!payloadInscritos.lista || payloadInscritos.lista.length === 0) {
+      if (!payloadInscritos || !payloadInscritos.lista || payloadInscritos.lista.length === 0) {
         alert("Nenhum competidor cadastrado na planilha ainda!");
         return;
       }
       
-      let lista = [...payloadInscritos.lista];
+      // Coleta e limpa os nicks vindos da planilha
+      let listaRaw = Array.isArray(payloadInscritos.lista) ? payloadInscritos.lista : [payloadInscritos.lista];
+      let lista = listaRaw.map(nome => nome ? nome.toString().trim() : "")
+                          .filter(nome => nome !== "" && nome.toLowerCase() !== "nome");
+
+      if (lista.length < 2) {
+        alert("Quantidade de competidores insuficiente para gerar chaves!");
+        return;
+      }
+
+      // Embaralhamento Fisher-Yates
       for (let i = lista.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1));
         let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
@@ -311,73 +322,76 @@ async function gerarChaveamentoLocal() {
       let ganhamBye = lista.slice(reaisCount);
 
       confrontosAtivos = [];
+      
+      // Define os nomes corretos das fases dependendo do tamanho real do torneio
       let nomeFase1 = "Rodada Inicial";
-      if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
-      else if (potencia === 16) nomeFase1 = "Oitavas de Final";
+      if (potencia === 16) nomeFase1 = "Oitavas de Final";
       else if (potencia === 8) nomeFase1 = "Quartas de Final";
 
+      // 1. Cria as partidas reais da primeira rodada (Ex: F1-M1)
       for (let m = 0; m < partidasCount; m++) {
         confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
       }
+      
+      // 2. Cria os cards de BYE da primeira rodada (Ex: F1-B1)
       for (let b = 0; b < ganhamBye.length; b++) {
         confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
       }
 
-      let vagasFaseSeguinte = potencia / 2;
+      // 3. MONTAGEM PROPORCIONAL: Cria as fases seguintes dividindo por 2 sem gerar áreas fantasmas
+      let totalDeCardsFase2 = potencia / 2;
       let numeroFaseContador = 2;
 
-      while (vagasFaseSeguinte >= 1) {
+      while (totalDeCardsFase2 >= 1) {
         let nomeFaseLabel = "Fase " + numeroFaseContador;
-        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
-        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
-        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
+        if (totalDeCardsFase2 === 16) nomeFaseLabel = "Oitavas de Final";
+        if (totalDeCardsFase2 === 8) nomeFaseLabel = "Quartas de Final";
+        if (totalDeCardsFase2 === 4) nomeFaseLabel = "Quartas de Final"; // Ajuste para chaves com BYE
+        if (totalDeCardsFase2 === 2) nomeFaseLabel = "Semifinal";
+        if (totalDeCardsFase2 === 1) nomeFaseLabel = "Grande Final";
 
-        for (let x = 0; x < vagasFaseSeguinte; x++) {
+        // Cria os cards vazios apenas para os competidores que realmente vão avançar
+        for (let x = 0; x < totalDeCardsFase2; x++) {
           confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
         }
-        vagasFaseSeguinte = vagasFaseSeguinte / 2;
+        totalDeCardsFase2 = totalDeCardsFase2 / 2;
         numeroFaseContador++;
       }
 
+      // Ativa o avanço automático imediato dos BYEs para os slots vazios da Fase 2
       ganhamBye.forEach((jogador, b) => {
         let fakeId = "F1-B" + (b + 1);
-        avançarJogadorNaArvoreLocal(fakeId, Agreement);
-        // Pequena correção interna para repassar a variável exata jogador
         avançarJogadorNaArvoreLocal(fakeId, jogador);
       });
 
       await enviarChavesParaNuvem();
-    } catch(err) { alert("Erro ao carregar inscritos da planilha."); }
+    } catch(err) { alert("Erro ao gerar chaveamento real."); }
   }
 }
-// --- MOTOR DE AVANÇO NUMÉRICO ORIGINAL: Identifica as fases de metades exatas via Regex ---
+
+// --- MOTOR DE AVANÇO NUMÉRICO REVISADO: Impede quebra de slots de fases futuras ---
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   let partes = idDuelo.split("-");
   if (partes.length < 2) return;
 
-  // Isola os números puros da Fase e do Confronto usando expressões regulares estritas
+  // Extrai com precisão a fase e o número do card jogado
   let faseAtual = parseInt(partes[0].replace(/[^0-9]/g, ""));
   let numeroMatch = parseInt(partes[1].replace(/[^0-9]/g, ""));
   if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
 
   let proximaFase = faseAtual + 1;
   let proximoMatchIndex = Math.ceil(numeroMatch / 2);
-  let ehSlot1 = (numeroMatch % 2 !== 0); // Ímpar vai para o J1, par vai para o J2
+  let ehSlot1 = (numeroMatch % 2 !== 0);
 
   let idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
+  let nomeLimpoFiltrado = nomeVencedor.toString().trim();
 
-  // Move o nome do jogador para a vaga correspondente da fase superior
   confrontosAtivos.forEach(match => {
-    if (match.id === idAlvo) {
-      if (ehSlot1) {
-        match.j1 = nomeVencedor;
-      } else {
-        match.j2 = nomeVencedor;
-      }
+    if (match.id && match.id.toString().trim() === idAlvo) {
+      if (ehSlot1) { match.j1 = nomeLimpoFiltrado; } 
+      else { match.j2 = nomeLimpoFiltrado; }
       
-      // REGRA DE CADEIA EM BYE: Se o oponente for um "BYE", avança o competidor novamente de forma recursiva
+      // Tratamento recursivo em cadeia se o slot de destino tiver um BYE fantasma
       if (match.j1 === "BYE" || match.j2 === "BYE") {
         let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
         if (proxVencedor !== "Aguardando...") {
