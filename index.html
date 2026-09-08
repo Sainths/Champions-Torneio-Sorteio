@@ -153,6 +153,7 @@
 
     <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
   </div>
+  
 <script>
 const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
 let loopMonitoramento = null;
@@ -282,7 +283,136 @@ async function sincronizarDadosGeraisTorneio() {
   } catch (e) { console.warn("Aviso na sincronização."); }
 }
 
-// --- GERADOR MATEMÁTICO INTEGRAL: Cria apenas os slots estritamente necessários ---
+<script>
+const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
+let loopMonitoramento = null;
+let informacoesJogadorLogado = null;
+
+// --- FUNÇÃO AUXILIAR: Identifica links do Showdown/Pokepaste e cria o botão clicável ---
+function formatarColunaTimeComLink(textoTime) {
+  if (!textoTime || textoTime.trim() === "" || textoTime.trim() === "Aguardando..." || textoTime.trim() === "BYE") return "";
+  
+  var textoLimpo = textoTime.toString().trim();
+  
+  if (textoLimpo.startsWith("http://") || textoLimpo.startsWith("https://") || textoLimpo.includes("pokepaste") || textoLimpo.includes("showdown")) {
+    return `
+      <a href="${textoLimpo}" target="_blank" rel="noopener noreferrer" style="
+        display: inline-block;
+        background: linear-gradient(to bottom, #00bfff, #0a2e5c);
+        color: white;
+        text-decoration: none;
+        padding: 3px 6px;
+        font-size: 0.6rem;
+        font-weight: bold;
+        border-radius: 3px;
+        text-transform: uppercase;
+        border: 1px solid #00bfff;
+        margin-left: 6px;
+        cursor: pointer;
+      ">📋 Lista</a>
+    `;
+  }
+  return "";
+}
+
+let timesMapeadosPorTreinador = {};
+let confrontosAtivos = [];
+
+window.onload = () => {
+  const sessaoSalva = localStorage.getItem('SessionTournament');
+  if (sessaoSalva) {
+    try {
+      informacoesJogadorLogado = JSON.parse(sessaoSalva);
+      liberarAmbientePrincipal(informacoesJogadorLogado);
+    } catch(e) { localStorage.removeItem('SessionTournament'); }
+  }
+};
+
+function trocarAbaVisual(idAbaAlvo) {
+  document.querySelectorAll('.tab-content').forEach(aba => aba.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  const abaAtiva = document.getElementById(idAbaAlvo);
+  if (abaAtiva) abaAtiva.classList.remove('hidden');
+  
+  if(idAbaAlvo === 'aba-chaveamento') document.getElementById('btn-aba-chaves').classList.add('active');
+  if(idAbaAlvo === 'aba-premios') document.getElementById('btn-aba-premios').classList.add('active');
+}
+
+async function registrarInscricao(tipoAtividade) {
+  const nome = document.getElementById('nome').value.trim();
+  const senha = document.getElementById('senha').value;
+  const timeDigitado = document.getElementById('deck-torneio') ? document.getElementById('deck-torneio').value.trim() : "";
+  const statusElement = document.getElementById('status-login');
+
+  if (!nome || !senha) { alert("Preencha o Nome e a Senha!"); return; }
+  if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
+
+  try {
+    const resposta = await fetch(URL_SISTEMA_CHAVAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, deck: timeDigitado, escopo: tipoAtividade })
+    });
+    
+    const dadosServidor = await resposta.json();
+
+    if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
+      informacoesJogadorLogado = { nome, senha };
+      localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
+      if (statusElement) statusElement.innerText = "Acesso validado!";
+      setTimeout(() => {
+        liberarAmbientePrincipal(informacoesJogadorLogado);
+        if(document.getElementById('deck-torneio')) document.getElementById('deck-torneio').value = "";
+      }, 1000);
+    } else {
+      if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais.";
+    }
+  } catch (erro) { if (statusElement) statusElement.innerText = "Erro na validação de rede."; }
+}
+
+function liberarAmbientePrincipal(dadosUsuario) {
+  if(!dadosUsuario || !dadosUsuario.nome) return;
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('main-screen').classList.remove('hidden');
+  document.getElementById('user-display').innerText = dadosUsuario.nome;
+
+  const nomeMinusculo = dadosUsuario.nome.toLowerCase();
+  if (nomeMinusculo === "sainths" || nomeMinusculo === "pokemaners") {
+    document.getElementById('painel-admin').classList.remove('hidden');
+  }
+
+  sincronizarDadosGeraisTorneio();
+  if (loopMonitoramento) clearInterval(loopMonitoramento);
+  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 8000);
+}
+
+async function sincronizarDadosGeraisTorneio() {
+  try {
+    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
+    const payload = await resposta.json();
+    
+    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
+    if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
+    
+    if (payload.listaInscritosComTimes) {
+      timesMapeadosPorTreinador = {};
+      payload.listaInscritosComTimes.forEach(inf => {
+        if (inf.nome) timesMapeadosPorTreinador[inf.nome.toString().trim().toLowerCase()] = inf.time || "";
+      });
+    }
+
+    if (payload.chavesNuvem && payload.chavesNuvem.length > 0) {
+      confrontosAtivos = payload.chavesNuvem;
+      renderizarArvoreMataMataLocal();
+    } else {
+      confrontosAtivos = [];
+      const container = document.getElementById('container-fases-arvore');
+      if (container) container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
+    }
+  } catch (e) { console.warn("Aviso na sincronização."); }
+}
+
+// --- CORREÇÃO: O Verdadeiro Motor de eSports à Prova de Números Quebrados ---
 async function gerarChaveamentoLocal() {
   if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
     try {
@@ -294,7 +424,7 @@ async function gerarChaveamentoLocal() {
         return;
       }
       
-      // Coleta e limpa os nicks vindos da planilha
+      // Filtra e isola estritamente os nicks limpos da Coluna A
       let listaRaw = Array.isArray(payloadInscritos.lista) ? payloadInscritos.lista : [payloadInscritos.lista];
       let lista = listaRaw.map(nome => nome ? nome.toString().trim() : "")
                           .filter(nome => nome !== "" && nome.toLowerCase() !== "nome");
@@ -304,7 +434,7 @@ async function gerarChaveamentoLocal() {
         return;
       }
 
-      // Embaralhamento Fisher-Yates
+      // Embaralhamento Fisher-Yates seguro
       for (let i = lista.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1));
         let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
@@ -323,117 +453,52 @@ async function gerarChaveamentoLocal() {
 
       confrontosAtivos = [];
       
-      // Define os nomes corretos das fases dependendo do tamanho real do torneio
       let nomeFase1 = "Rodada Inicial";
-      if (potencia === 16) nomeFase1 = "Oitavas de Final";
+      if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
+      else if (potencia === 16) nomeFase1 = "Oitavas de Final";
       else if (potencia === 8) nomeFase1 = "Quartas de Final";
 
-      // 1. Cria as partidas reais da primeira rodada (Ex: F1-M1)
+      // 1. Monta os duelos reais do Round 1 (ID fixo: F1-MXX)
       for (let m = 0; m < partidasCount; m++) {
         confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
       }
       
-      // 2. Cria os cards de BYE da primeira rodada (Ex: F1-B1)
+      // 2. Monta as isenções do Round 1 (ID fixo: F1-BXX)
       for (let b = 0; b < ganhamBye.length; b++) {
         confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
       }
 
-      // 3. MONTAGEM PROPORCIONAL: Cria as fases seguintes dividindo por 2 sem gerar áreas fantasmas
-      let totalDeCardsFase2 = potencia / 2;
+      // 3. Montagem dinâmica decrescente exata das fases futuras
+      let vagasFaseSeguinte = potencia / 2;
       let numeroFaseContador = 2;
 
-      while (totalDeCardsFase2 >= 1) {
+      while (vagasFaseSeguinte >= 1) {
         let nomeFaseLabel = "Fase " + numeroFaseContador;
-        if (totalDeCardsFase2 === 16) nomeFaseLabel = "Oitavas de Final";
-        if (totalDeCardsFase2 === 8) nomeFaseLabel = "Quartas de Final";
-        if (totalDeCardsFase2 === 4) nomeFaseLabel = "Quartas de Final"; // Ajuste para chaves com BYE
-        if (totalDeCardsFase2 === 2) nomeFaseLabel = "Semifinal";
-        if (totalDeCardsFase2 === 1) nomeFaseLabel = "Grande Final";
+        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
+        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
+        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
+        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
+        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
 
-        // Cria os cards vazios apenas para os competidores que realmente vão avançar
-        for (let x = 0; x < totalDeCardsFase2; x++) {
+        for (let x = 0; x < vagasFaseSeguinte; x++) {
           confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
         }
-        totalDeCardsFase2 = totalDeCardsFase2 / 2;
+        vagasFaseSeguinte = vagasFaseSeguinte / 2;
         numeroFaseContador++;
       }
 
-      // Ativa o avanço automático imediato dos BYEs para os slots vazios da Fase 2
+      // Auto-avança os BYEs iniciais para as chaves da Fase 2 imediatamente
       ganhamBye.forEach((jogador, b) => {
         let fakeId = "F1-B" + (b + 1);
         avançarJogadorNaArvoreLocal(fakeId, jogador);
       });
 
       await enviarChavesParaNuvem();
-    } catch(err) { alert("Erro ao gerar chaveamento real."); }
+    } catch(err) { alert("Erro ao gerar chaveamento síncrono."); }
   }
 }
 
-// --- MOTOR DE AVANÇO NUMÉRICO REVISADO: Correção cirúrgica de extração de índices puros ---
-function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
-  if (!idDuelo || !nomeVencedor) return;
-  
-  let partes = idDuelo.split("-");
-  if (partes.length < 2) return;
-
-  // CORREÇÃO: Extrai os números usando as posições exatas [0] e [1] do array repartido
-  let faseTexto = partes[0].replace(/[^0-9]/g, "");
-  let matchTexto = partes[1].replace(/[^0-9]/g, "");
-  
-  let faseAtual = parseInt(faseTexto);
-  let numeroMatch = parseInt(matchTexto);
-  if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
-
-  let proximaFase = faseAtual + 1;
-  let proximoMatchIndex = Math.ceil(numeroMatch / 2);
-  let ehSlot1 = (numeroMatch % 2 !== 0);
-
-  let idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
-  let nomeLimpoFiltrado = nomeVencedor.toString().trim();
-
-  confrontosAtivos.forEach(match => {
-    if (match.id && match.id.toString().trim() === idAlvo) {
-      if (ehSlot1) { 
-        match.j1 = nomeLimpoFiltrado; 
-      } else { 
-        match.j2 = nomeLimpoFiltrado; 
-      }
-      
-      // Auto-avanço em cadeia para rodadas superiores com BYE
-      if (match.j1 === "BYE" || match.j2 === "BYE") {
-        let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
-        if (proxVencedor !== "Aguardando...") {
-          match.vencedor = proxVencedor;
-          avançarJogadorNaArvoreLocal(idAlvo, proxVencedor);
-        }
-      }
-    }
-  });
-}
-
-async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (!idDuelo || !nomeVencedor) return;
-  if (confirm("Confirma seu reporte de vitória no Set para " + nomeVencedor + "?")) {
-    confrontosAtivos.forEach(match => {
-      if (match.id === idDuelo) {
-        match.vencedor = nomeVencedor;
-        avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
-      }
-    });
-    await enviarChavesParaNuvem();
-  }
-}
-
-async function enviarChavesParaNuvem() {
-  renderizarArvoreMataMataLocal();
-  await fetch(URL_SISTEMA_CHAVAS, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
-  });
-}
-
-// --- RENDERIZADOR SUPREMO: Limpa a tela e isola os nicks puros para o motor de avanço ---
+// --- RENDERIZADOR SUPREMO: Limpa a tela e reconstrói as chaves com os links corretos ---
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -441,7 +506,7 @@ function renderizarArvoreMataMataLocal() {
   container.innerHTML = "";
 
   if (!confrontosAtivos || confrontosAtivos.length === 0) {
-    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>';`;
+    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
     return;
   }
 
@@ -487,7 +552,6 @@ function renderizarArvoreMataMataLocal() {
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
-      // CORREÇÃO CIRÚRGICA: Isola o nome puro e limpo enviado para a função, impedindo o HTML do botão de entrar na fórmula
       let j1Puro = match.j1.toString().trim();
       let j2Puro = match.j2.toString().trim();
 
@@ -513,17 +577,15 @@ function renderizarArvoreMataMataLocal() {
   container.innerHTML = html;
 }
 
-// --- ENGINE FIXA: Filtra strings e impede conflito de caracteres nos slots ---
+// --- ENGINE REVISADA: Extração direta via Expressão Regular Nativa sem conflito de arrays ---
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
-  let partes = idDuelo.split("-");
-  if (partes.length < 2) return;
+  if (!idDuelo || !nomeVencedor) return;
 
-  // Filtra as variáveis de IDs removendo qualquer string gerada pelo renderizador visual
-  let faseTexto = partes[0].replace(/[^0-9]/g, "");
-  let matchTexto = partes[1].replace(/[^0-9]/g, "");
-  
-  let faseAtual = parseInt(faseTexto);
-  let numeroMatch = parseInt(matchTexto);
+  let numeros = idDuelo.match(/\d+/g);
+  if (!numeros || numeros.length < 2) return;
+
+  let faseAtual = parseInt(numeros[0]);
+  let numeroMatch = parseInt(numeros[1]);
   if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
 
   let proximaFase = faseAtual + 1;
@@ -535,11 +597,8 @@ function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
 
   confrontosAtivos.forEach(match => {
     if (match.id && match.id.toString().trim() === idAlvo) {
-      if (ehSlot1) { 
-        match.j1 = nomeLimpoFiltrado; 
-      } else { 
-        match.j2 = nomeLimpoFiltrado; 
-      }
+      if (ehSlot1) { match.j1 = nomeLimpoFiltrado; } 
+      else { match.j2 = nomeLimpoFiltrado; }
       
       if (match.j1 === "BYE" || match.j2 === "BYE") {
         let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
@@ -549,6 +608,28 @@ function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
         }
       }
     }
+  });
+}
+
+async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
+  if (!idDuelo || !nomeVencedor) return;
+  if (confirm("Confirma seu reporte de vitória no Set para " + nomeVencedor + "?")) {
+    confrontosAtivos.forEach(match => {
+      if (match.id === idDuelo) {
+        match.vencedor = nomeVencedor;
+        avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
+      }
+    });
+    await enviarChavesParaNuvem();
+  }
+}
+
+async function enviarChavesParaNuvem() {
+  renderizarArvoreMataMataLocal();
+  await fetch(URL_SISTEMA_CHAVAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
   });
 }
 
