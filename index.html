@@ -255,19 +255,30 @@ async function gerarChaveamentoLocal() {
         confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
       }
 
-      let vagasFaseSeguinte = potencia / 2; let numeroFaseContador = 2;
+      // --- CORREÇÃO DA MATRIZ DE RÓTULOS DE FASES DO TORNEIO ---
+      let vagasFaseSeguinte = potencia / 2; 
+      let numeroFaseContador = 2;
+
       while (vagasFaseSeguinte >= 1) {
         let nomeFaseLabel = "Fase " + numeroFaseContador;
-        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
-        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal";
-        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
+        
+        // Define o nome exato baseado na quantidade real de partidas daquela rodada
+        if (vagasFaseSeguinte === 8) { nomeFaseLabel = "Quartas de Final"; }
+        else if (vagasFaseSeguinte === 4) { nomeFaseLabel = "Quartas de Final"; }
+        else if (vagasFaseSeguinte === 2) { nomeFaseLabel = "Semifinal"; }
+        else if (vagasFaseSeguinte === 1) { nomeFaseLabel = "Grande Final"; }
 
         for (let x = 0; x < vagasFaseSeguinte; x++) {
-          confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
+          confrontosAtivos.push({ 
+            id: "F" + numeroFaseContador + "-M" + (x + 1), 
+            fase: nomeFaseLabel, 
+            j1: "Aguardando...", 
+            j2: "Aguardando...", 
+            vencedor: "" 
+          });
         }
-        vagasFaseSeguinte = vagasFaseSeguinte / 2; numeroFaseContador++;
+        vagasFaseSeguinte = vagasFaseSeguinte / 2; 
+        numeroFaseContador++;
       }
 
       ganhamBye.forEach((jogador, b) => {
@@ -278,6 +289,7 @@ async function gerarChaveamentoLocal() {
     } catch(err) { alert("Erro ao gerar chaveamento."); }
   }
 }
+
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   if (!idDuelo || !nomeVencedor) return;
   var numeros = idDuelo.match(/\d+/g);
@@ -340,30 +352,36 @@ function renderizarArvoreMataMataLocal() {
     container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`; return;
   }
 
-  var nomeCampSupremo = "";
+  var nomeCampeaoSupremo = "";
   var ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
   if (ultimoMatch && ultimoMatch.fase === "Grande Final" && ultimoMatch.vencedor) {
-    nomeCampSupremo = ultimoMatch.vencedor;
+    nomeCampeaoSupremo = ultimoMatch.vencedor;
   }
 
   var html = "";
-  if (nomeCampSupremo !== "" && nomeCampSupremo !== "BYE") {
-    html += `<div style="text-align: center;"><div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite;"><div style="font-size: 1.8rem;">👑🏆👑</div><div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div><div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0;">${nomeCampSupremo}</div></div></div>`;
+  if (nomeCampeaoSupremo !== "" && nomeCampeaoSupremo !== "BYE") {
+    html += `<div style="text-align: center;"><div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite;"><div style="font-size: 1.8rem;">👑🏆👑</div><div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div><div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0;">${nomeCampeaoSupremo}</div></div></div>`;
   }
 
+  // Agrupa os confrontos garantindo chaves textuais limpas e únicas por fase
   var agrupamento = {};
   confrontosAtivos.forEach(m => {
     if (m && m.fase) {
-      if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
-      agrupamento[m.fase].push(m);
+      var nomeFaseChave = m.fase.toString().trim();
+      if (!agrupamento[nomeFaseChave]) {
+        agrupamento[nomeFaseChave] = [];
+      }
+      agrupamento[nomeFaseChave].push(m);
     }
   });
 
+  // Renderiza cada fase em um bloco estrito e exclusivo
   for (var fase in agrupamento) {
     var contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
     if (!contemPartidaValida) continue;
 
     html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
+    
     agrupamento[fase].forEach(match => {
       if (match.j1 === "BYE" || match.j2 === "BYE") return;
 
@@ -384,12 +402,12 @@ function renderizarArvoreMataMataLocal() {
       html += `
         <div class="card-duelo" style="margin-bottom: 15px;">
           <div class="duelistas-nomes" style="flex: 1;">
-            <div class="linha-treinador ${isW1 ? 'winner' : ''}">
+            <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="display: flex; align-items: center;">🏃 ${j1Puro} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
               ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j1Puro}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
-            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="margin-top: 8px;">
-              <span style="display: flex; align-items: center;">` + `🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
+            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center;">🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
               ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j2Puro}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
           </div>
