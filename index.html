@@ -411,6 +411,7 @@ async function enviarChavesParaNuvem() {
   });
 }
 
+// --- RENDERIZADOR SUPREMO: Limpa a tela e isola os nicks puros para o motor de avanço ---
 function renderizarArvoreMataMataLocal() {
   const container = document.getElementById('container-fases-arvore');
   if (!container) return;
@@ -464,19 +465,23 @@ function renderizarArvoreMataMataLocal() {
       const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
       const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
 
-      let t1 = timesMapeadosPorTreinador[match.j1.toString().toLowerCase()] || "";
-      let t2 = timesMapeadosPorTreinador[match.j2.toString().toLowerCase()] || "";
+      // CORREÇÃO CIRÚRGICA: Isola o nome puro e limpo enviado para a função, impedindo o HTML do botão de entrar na fórmula
+      let j1Puro = match.j1.toString().trim();
+      let j2Puro = match.j2.toString().trim();
+
+      let t1 = timesMapeadosPorTreinador[j1Puro.toLowerCase()] || "";
+      let t2 = timesMapeadosPorTreinador[j2Puro.toLowerCase()] || "";
 
       html += `
         <div class="card-duelo" style="margin-bottom: 15px;">
           <div class="duelistas-nomes" style="flex: 1;">
             <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="display: flex; align-items: center;">🏃 ${match.j1} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
-              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j1}')" class="btn-vitoria">Venceu</button>` : ""}
+              <span style="display: flex; align-items: center;">🏃 ${j1Puro} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
+              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j1Puro}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
             <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="display: flex; align-items: center;">🏃 ${match.j2} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
-              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${match.j2}')" class="btn-vitoria">Venceu</button>` : ""}
+              <span style="display: flex; align-items: center;">🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
+              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j2Puro}')" class="btn-vitoria">Venceu</button>` : ""}
             </div>
           </div>
         </div>`;
@@ -484,6 +489,45 @@ function renderizarArvoreMataMataLocal() {
     html += `</div>`;
   }
   container.innerHTML = html;
+}
+
+// --- ENGINE FIXA: Filtra strings e impede conflito de caracteres nos slots ---
+function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
+  let partes = idDuelo.split("-");
+  if (partes.length < 2) return;
+
+  // Filtra as variáveis de IDs removendo qualquer string gerada pelo renderizador visual
+  let faseTexto = partes[0].replace(/[^0-9]/g, "");
+  let matchTexto = partes[1].replace(/[^0-9]/g, "");
+  
+  let faseAtual = parseInt(faseTexto);
+  let numeroMatch = parseInt(matchTexto);
+  if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
+
+  let proximaFase = faseAtual + 1;
+  let proximoMatchIndex = Math.ceil(numeroMatch / 2);
+  let ehSlot1 = (numeroMatch % 2 !== 0);
+
+  let idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
+  let nomeLimpoFiltrado = nomeVencedor.toString().trim();
+
+  confrontosAtivos.forEach(match => {
+    if (match.id && match.id.toString().trim() === idAlvo) {
+      if (ehSlot1) { 
+        match.j1 = nomeLimpoFiltrado; 
+      } else { 
+        match.j2 = nomeLimpoFiltrado; 
+      }
+      
+      if (match.j1 === "BYE" || match.j2 === "BYE") {
+        let proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
+        if (proxVencedor !== "Aguardando...") {
+          match.vencedor = proxVencedor;
+          avançarJogadorNaArvoreLocal(idAlvo, proxVencedor);
+        }
+      }
+    }
+  });
 }
 
 async function publicarPremioSemSortear() {
