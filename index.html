@@ -102,6 +102,7 @@
     </div>
     <p id="status-login" class="status-msg"></p>
   </div>
+
   <!-- TELA 2: DASHBOARD PRINCIPAL -->
   <div id="main-screen" class="container hidden">
     <p style="text-align: left; font-size: 0.85rem; margin-bottom: 15px; color: #88c0d0;">Treinador: <span id="user-display" style="color:var(--amarelo-campeao); font-weight: bold;">---</span></p>
@@ -151,9 +152,6 @@
       </div>
     </div>
 
-    <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar Portal</button>
-  </div>
-  
 <script>
 const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
 let loopMonitoramento = null;
@@ -283,136 +281,6 @@ async function sincronizarDadosGeraisTorneio() {
   } catch (e) { console.warn("Aviso na sincronização."); }
 }
 
-<script>
-const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
-let loopMonitoramento = null;
-let informacoesJogadorLogado = null;
-
-// --- FUNÇÃO AUXILIAR: Identifica links do Showdown/Pokepaste e cria o botão clicável ---
-function formatarColunaTimeComLink(textoTime) {
-  if (!textoTime || textoTime.trim() === "" || textoTime.trim() === "Aguardando..." || textoTime.trim() === "BYE") return "";
-  
-  var textoLimpo = textoTime.toString().trim();
-  
-  if (textoLimpo.startsWith("http://") || textoLimpo.startsWith("https://") || textoLimpo.includes("pokepaste") || textoLimpo.includes("showdown")) {
-    return `
-      <a href="${textoLimpo}" target="_blank" rel="noopener noreferrer" style="
-        display: inline-block;
-        background: linear-gradient(to bottom, #00bfff, #0a2e5c);
-        color: white;
-        text-decoration: none;
-        padding: 3px 6px;
-        font-size: 0.6rem;
-        font-weight: bold;
-        border-radius: 3px;
-        text-transform: uppercase;
-        border: 1px solid #00bfff;
-        margin-left: 6px;
-        cursor: pointer;
-      ">📋 Lista</a>
-    `;
-  }
-  return "";
-}
-
-let timesMapeadosPorTreinador = {};
-let confrontosAtivos = [];
-
-window.onload = () => {
-  const sessaoSalva = localStorage.getItem('SessionTournament');
-  if (sessaoSalva) {
-    try {
-      informacoesJogadorLogado = JSON.parse(sessaoSalva);
-      liberarAmbientePrincipal(informacoesJogadorLogado);
-    } catch(e) { localStorage.removeItem('SessionTournament'); }
-  }
-};
-
-function trocarAbaVisual(idAbaAlvo) {
-  document.querySelectorAll('.tab-content').forEach(aba => aba.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  const abaAtiva = document.getElementById(idAbaAlvo);
-  if (abaAtiva) abaAtiva.classList.remove('hidden');
-  
-  if(idAbaAlvo === 'aba-chaveamento') document.getElementById('btn-aba-chaves').classList.add('active');
-  if(idAbaAlvo === 'aba-premios') document.getElementById('btn-aba-premios').classList.add('active');
-}
-
-async function registrarInscricao(tipoAtividade) {
-  const nome = document.getElementById('nome').value.trim();
-  const senha = document.getElementById('senha').value;
-  const timeDigitado = document.getElementById('deck-torneio') ? document.getElementById('deck-torneio').value.trim() : "";
-  const statusElement = document.getElementById('status-login');
-
-  if (!nome || !senha) { alert("Preencha o Nome e a Senha!"); return; }
-  if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
-
-  try {
-    const resposta = await fetch(URL_SISTEMA_CHAVAS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, deck: timeDigitado, escopo: tipoAtividade })
-    });
-    
-    const dadosServidor = await resposta.json();
-
-    if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
-      informacoesJogadorLogado = { nome, senha };
-      localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
-      if (statusElement) statusElement.innerText = "Acesso validado!";
-      setTimeout(() => {
-        liberarAmbientePrincipal(informacoesJogadorLogado);
-        if(document.getElementById('deck-torneio')) document.getElementById('deck-torneio').value = "";
-      }, 1000);
-    } else {
-      if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais.";
-    }
-  } catch (erro) { if (statusElement) statusElement.innerText = "Erro na validação de rede."; }
-}
-
-function liberarAmbientePrincipal(dadosUsuario) {
-  if(!dadosUsuario || !dadosUsuario.nome) return;
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  document.getElementById('user-display').innerText = dadosUsuario.nome;
-
-  const nomeMinusculo = dadosUsuario.nome.toLowerCase();
-  if (nomeMinusculo === "sainths" || nomeMinusculo === "pokemaners") {
-    document.getElementById('painel-admin').classList.remove('hidden');
-  }
-
-  sincronizarDadosGeraisTorneio();
-  if (loopMonitoramento) clearInterval(loopMonitoramento);
-  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 8000);
-}
-
-async function sincronizarDadosGeraisTorneio() {
-  try {
-    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
-    const payload = await resposta.json();
-    
-    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
-    if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
-    
-    if (payload.listaInscritosComTimes) {
-      timesMapeadosPorTreinador = {};
-      payload.listaInscritosComTimes.forEach(inf => {
-        if (inf.nome) timesMapeadosPorTreinador[inf.nome.toString().trim().toLowerCase()] = inf.time || "";
-      });
-    }
-
-    if (payload.chavesNuvem && payload.chavesNuvem.length > 0) {
-      confrontosAtivos = payload.chavesNuvem;
-      renderizarArvoreMataMataLocal();
-    } else {
-      confrontosAtivos = [];
-      const container = document.getElementById('container-fases-arvore');
-      if (container) container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
-    }
-  } catch (e) { console.warn("Aviso na sincronização."); }
-}
-
-// --- CORREÇÃO: O Verdadeiro Motor de eSports à Prova de Números Quebrados ---
 async function gerarChaveamentoLocal() {
   if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
     try {
@@ -424,7 +292,6 @@ async function gerarChaveamentoLocal() {
         return;
       }
       
-      // Filtra e isola estritamente os nicks limpos da Coluna A
       let listaRaw = Array.isArray(payloadInscritos.lista) ? payloadInscritos.lista : [payloadInscritos.lista];
       let lista = listaRaw.map(nome => nome ? nome.toString().trim() : "")
                           .filter(nome => nome !== "" && nome.toLowerCase() !== "nome");
@@ -434,7 +301,6 @@ async function gerarChaveamentoLocal() {
         return;
       }
 
-      // Embaralhamento Fisher-Yates seguro
       for (let i = lista.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1));
         let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
@@ -452,23 +318,18 @@ async function gerarChaveamentoLocal() {
       let ganhamBye = lista.slice(reaisCount);
 
       confrontosAtivos = [];
-      
       let nomeFase1 = "Rodada Inicial";
       if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
       else if (potencia === 16) nomeFase1 = "Oitavas de Final";
       else if (potencia === 8) nomeFase1 = "Quartas de Final";
 
-      // 1. Monta os duelos reais do Round 1 (ID fixo: F1-MXX)
       for (let m = 0; m < partidasCount; m++) {
         confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
       }
-      
-      // 2. Monta as isenções do Round 1 (ID fixo: F1-BXX)
       for (let b = 0; b < ganhamBye.length; b++) {
         confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
       }
 
-      // 3. Montagem dinâmica decrescente exata das fases futuras
       let vagasFaseSeguinte = potencia / 2;
       let numeroFaseContador = 2;
 
@@ -487,97 +348,16 @@ async function gerarChaveamentoLocal() {
         numeroFaseContador++;
       }
 
-      // Auto-avança os BYEs iniciais para as chaves da Fase 2 imediatamente
       ganhamBye.forEach((jogador, b) => {
         let fakeId = "F1-B" + (b + 1);
         avançarJogadorNaArvoreLocal(fakeId, jogador);
       });
 
       await enviarChavesParaNuvem();
-    } catch(err) { alert("Erro ao gerar chaveamento síncrono."); }
+    } catch(err) { alert("Erro ao gerar chaveamento."); }
   }
 }
 
-// --- RENDERIZADOR SUPREMO: Limpa a tela e reconstrói as chaves com os links corretos ---
-function renderizarArvoreMataMataLocal() {
-  const container = document.getElementById('container-fases-arvore');
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (!confrontosAtivos || confrontosAtivos.length === 0) {
-    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
-    return;
-  }
-
-  let nomeCampeaoSupremo = "";
-  let ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
-  if (ultimoMatch && ultimoMatch.fase === "Grande Final" && ultimoMatch.vencedor) {
-    nomeCampeaoSupremo = ultimoMatch.vencedor;
-  }
-
-  let html = "";
-  if (nomeCampeaoSupremo !== "" && nomeCampeaoSupremo !== "BYE") {
-    html += `
-      <div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite; text-align: center;">
-        <div style="font-size: 1.8rem;">👑🏆👑</div>
-        <div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div>
-        <div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0;">${nomeCampeaoSupremo}</div>
-        <div style="font-size: 0.75rem; color: #88c0d0; font-style: italic;">Parabéns pelo título Master VGC!</div>
-      </div>`;
-  }
-
-  let agrupamento = {};
-  confrontosAtivos.forEach(m => {
-    if (m && m.fase) {
-      if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
-      agrupamento[m.fase].push(m);
-    }
-  });
-
-  for (const fase in agrupamento) {
-    let contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
-    if (!contemPartidaValida) continue;
-
-    html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
-    
-    agrupamento[fase].forEach(match => {
-      if (match.j1 === "BYE" || match.j2 === "BYE") return;
-
-      const isW1 = match.vencedor && match.vencedor === match.j1;
-      const isW2 = match.vencedor && match.vencedor === match.j2;
-      const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
-      const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
-      const eDono1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j1;
-      const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
-      const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
-
-      let j1Puro = match.j1.toString().trim();
-      let j2Puro = match.j2.toString().trim();
-
-      let t1 = timesMapeadosPorTreinador[j1Puro.toLowerCase()] || "";
-      let t2 = timesMapeadosPorTreinador[j2Puro.toLowerCase()] || "";
-
-      html += `
-        <div class="card-duelo" style="margin-bottom: 15px;">
-          <div class="duelistas-nomes" style="flex: 1;">
-            <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="display: flex; align-items: center;">🏃 ${j1Puro} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
-              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j1Puro}')" class="btn-vitoria">Venceu</button>` : ""}
-            </div>
-            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="display: flex; align-items: center;">🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
-              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j2Puro}')" class="btn-vitoria">Venceu</button>` : ""}
-            </div>
-          </div>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-  container.innerHTML = html;
-}
-
-// --- ENGINE REVISADA: Extração direta via Expressão Regular Nativa sem conflito de arrays ---
 function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
   if (!idDuelo || !nomeVencedor) return;
 
@@ -631,6 +411,83 @@ async function enviarChavesParaNuvem() {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
   });
+}
+
+function renderizarArvoreMataMataLocal() {
+  const container = document.getElementById('container-fases-arvore');
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!confrontosAtivos || confrontosAtivos.length === 0) {
+    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
+    return;
+  }
+
+  let nomeCampeaoSupremo = "";
+  let ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
+  if (ultimoMatch && ultimoMatch.fase === "Grande Final" && ultimoMatch.vencedor) {
+    nomeCampeaoSupremo = ultimoMatch.vencedor;
+  }
+
+  let html = "";
+  if (nomeCampeaoSupremo !== "" && nomeCampeaoSupremo !== "BYE") {
+    html += `
+      <div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite; text-align: center;">
+        <div style="font-size: 1.8rem;">👑🏆👑</div>
+        <div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div>
+        <div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0;">${nomeCampeaoSupremo}</div>
+        <div style="font-size: 0.75rem; color: #88c0d0; font-style: italic;">Parabéns pelo título Master VGC!</div>
+      </div>`;
+  }
+
+  let agrupamento = {};
+  confrontosAtivos.forEach(m => {
+    if (m && m.fase) {
+      if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
+      agrupamento[m.fase].push(m);
+    }
+  });
+
+  for (const fase in agrupamento) {
+    let contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" && m.j2 !== "BYE");
+    if (!contemPartidaValida) continue;
+
+    html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
+    agrupamento[fase].forEach(match => {
+      if (match.j1 === "BYE" || match.j2 === "BYE") return;
+
+      const isW1 = match.vencedor && match.vencedor === match.j1;
+      const isW2 = match.vencedor && match.vencedor === match.j2;
+      const nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
+      const ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
+      const eDono1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j1;
+      const eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === match.j2;
+      const pronto = match.j1 !== "Aguardando..." && match.j2 !== "Aguardando...";
+
+      let j1Puro = match.j1.toString().trim();
+      let j2Puro = match.j2.toString().trim();
+
+      let t1 = timesMapeadosPorTreinador[j1Puro.toLowerCase()] || "";
+      let t2 = timesMapeadosPorTreinador[j2Puro.toLowerCase()] || "";
+
+      html += `
+        <div class="card-duelo" style="margin-bottom: 15px;">
+          <div class="duelistas-nomes" style="flex: 1;">
+            <div class="linha-treinador ${isW1 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="display: flex; align-items: center;">🏃 ${j1Puro} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
+              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j1Puro}')" class="btn-vitoria">Venceu</button>` : ""}
+            </div>
+            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center;">🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
+              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j2Puro}')" class="btn-vitoria">Venceu</button>` : ""}
+            </div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  container.innerHTML = html;
 }
 
 async function publicarPremioSemSortear() {
