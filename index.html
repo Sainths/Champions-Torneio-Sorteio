@@ -1,44 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
+  <title>Sorteio Pokémon</title>
   <base target="_top">
   <style>
-    :root { --poke-red: #ef5350; --poke-blue: #2a75d3; --poke-yellow: #ffcb05; --poke-dark: #333; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #eef2f3; display: flex; justify-content: center; }
-    .card { background: white; max-width: 450px; width: 100%; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; border: 4px solid var(--poke-dark); }
-    .header { background: var(--poke-red); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; text-shadow: 2px 2px var(--poke-dark); border-bottom: 8px solid var(--poke-dark); }
+    :root { 
+      --poke-red: #ef5350; 
+      --poke-blue: #2a75d3; 
+      --poke-yellow: #ffcb05; 
+      --poke-dark: #333; 
+    }
+    * { box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0; padding: 10px; background: #eef2f3; 
+      display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+    }
+    .card { 
+      background: white; max-width: 450px; width: 100%; 
+      border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+      overflow: hidden; border: 4px solid var(--poke-dark); 
+    }
+    .header { 
+      background: var(--poke-red); color: white; padding: 20px; 
+      text-align: center; font-size: 24px; font-weight: bold; 
+      text-shadow: 2px 2px var(--poke-dark); border-bottom: 8px solid var(--poke-dark); 
+    }
+    .header img {
+      max-width: 130px; width: 100%; height: auto; display: block; 
+      margin: 0 auto 10px auto; border-radius: 50%; object-fit: cover; 
+      aspect-ratio: 1 / 1; border: 4px solid var(--poke-dark); background: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
     .content { padding: 20px; }
     .campo { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--poke-dark); }
-    input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+    input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 16px; }
     input:focus { border-color: var(--poke-blue); outline: none; }
-    button { background: var(--poke-yellow); color: var(--poke-dark); border: 2px solid var(--poke-dark); padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; text-transform: uppercase; box-shadow: 0 4px #bfa104; transition: 0.1s; }
+    button { 
+      background: var(--poke-yellow); color: var(--poke-dark); border: 2px solid var(--poke-dark); 
+      padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; 
+      width: 100%; text-transform: uppercase; box-shadow: 0 4px #bfa104; transition: 0.1s; 
+    }
     button:active { box-shadow: 0 0px #bfa104; transform: translateY(4px); }
     .btn-danger { background: var(--poke-red); color: white; box-shadow: 0 4px #9e2a2b; }
     .btn-danger:active { box-shadow: 0 0px #9e2a2b; }
+    .btn-logout { background: #ccc; color: #333; border: 2px solid #999; box-shadow: 0 4px #999; margin-top: 15px; }
+    .btn-logout:active { box-shadow: 0 0px #999; }
     .painel-box { background: #fffde7; border: 3px dashed var(--poke-blue); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
     .resultado-sorteio { font-size: 20px; font-weight: bold; color: #d32f2f; margin-top: 10px; }
     .hidden { display: none; }
-    .pokebola { width: 60px; height: 60px; background: white; border: 3px solid #333; border-radius: 50%; position: relative; margin: 15px auto; overflow: hidden; animation: shake 1.5s infinite ease-in-out; display: none; }
+    .pokebola { 
+      width: 60px; height: 60px; background: white; border: 3px solid #333; border-radius: 50%; 
+      position: relative; margin: 15px auto; overflow: hidden; animation: shake 1.5s infinite ease-in-out; display: none; 
+    }
     .pokebola::before { content: ''; position: absolute; background: red; width: 100%; height: 50%; top: 0; left: 0; border-bottom: 3px solid #333; }
     .pokebola::after { content: ''; position: absolute; background: white; width: 16px; height: 16px; border: 3px solid #333; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
     @keyframes shake { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(-15deg); } 40% { transform: rotate(15deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } }
   </style>
 </head>
 <body>
-
 <div class="card">
- <div class="header">
-  <img src="logo.png" alt="Rotom Sorteio" style="max-width: 130px; width: 100%; height: auto; display: block; margin: 0 auto 10px auto; border-radius: 50%; object-fit: cover; aspect-ratio: 1 / 1; border: 4px solid var(--poke-dark); box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-  SORTEIO PÓKEMON
-</div>
-
+  <div class="header">
+    <img src="logo.png" alt="Rotom Sorteio">
+    SORTEIO PÓKEMON
+  </div>
   <div class="content">
     
     <!-- TELA DE LOGIN -->
     <div id="telaLogin">
       <h3>Bem-vindo, Treinador!</h3>
-      <p style="font-size: 14px; color: #666;">Digite um usuário e senha. Se você não tiver cadastro, ele será feito na hora!</p>
+      <p style="font-size: 14px; color: #666;">Digite um usuário e senha para acessar ou criar sua conta na hora!</p>
       <div class="campo">
         <label>Nome de Usuário:</label>
         <input type="text" id="usuario" placeholder="Ex: AshKetchum">
@@ -63,50 +98,45 @@
         <p><strong>🏆 GANHADOR DA RODADA:</strong></p>
         <div id="txtGanhador" class="resultado-sorteio">Aguardando o sorteio iniciar!</div>
       </div>
-      <p style="text-align: center; font-size: 12px; color: #777;">Os dados atualizam automaticamente a cada 5 segundos.</p>
+      <p style="text-align: center; font-size: 12px; color: #777;">Os dados atualizam sozinhos a cada 5 segundos.</p>
+      <button onclick="fazerLogout()" class="btn-logout">Sair da Conta</button>
     </div>
 
-    <!-- TELA DO ORGANIZADOR (SAINTHS / POKEMANERS) -->
+    <!-- TELA DO ORGANIZADOR -->
     <div id="telaOrganizador" class="hidden">
       <h3>Painel Mestre (Organizador)</h3>
-      
       <div class="painel-box">
         <label><strong>1. Definir Novo Prêmio:</strong></label>
-        <input type="text" id="inputPremio" placeholder="Ex: Booster Box, Pelúcia Pikachu" style="margin-bottom: 10px;">
+        <input type="text" id="inputPremio" placeholder="Ex: Booster Box, Pelúcia" style="margin-bottom: 10px;">
         <button onclick="anunciarPremio()">Anunciar Prêmio</button>
       </div>
-
       <div class="painel-box">
         <label><strong>2. Rodar Urna:</strong></label>
         <button onclick="sortear()" style="background-color: #28a745; color: white; border-color: #1e7e34; box-shadow: 0 4px #1e7e34;">Sortear Ganhador 🎲</button>
         <div id="resultadoMestre" class="resultado-sorteio"></div>
       </div>
-
       <div class="painel-box" style="border-color: var(--poke-red);">
         <label><strong>Área de Perigo:</strong></label>
         <button onclick="resetar()" class="btn-danger">Resetar Urna para Novo Dia</button>
       </div>
+      <button onclick="fazerLogout()" class="btn-logout">Sair do Painel</button>
     </div>
 
   </div>
 </div>
-  
 <script>
-  // 🔴 COLE O SEU LINK DO GOOGLE APPS SCRIPT DENTRO DAS ASPAS ABAIXO:
+  // 🔴 IMPORTANTE: Substitua o texto abaixo pelo seu link real do Google Apps Script
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxaDlMKUEwzdp0b4RC55udGy5ngYYDAHqksUrq3Cx4jTUPtQmtLcL_zLyXYHfPz9O63ag/exec";
 
   var meuUsuario = "";
   var intervaloAtualizacao;
 
-  // 🔄 VERIFICA SE JÁ EXISTE LOGIN SALVO AO ABRIR O APP
   window.addEventListener("DOMContentLoaded", function() {
     var usuarioSalvo = localStorage.getItem("usuario_sorteio");
     var tipoSalvo = localStorage.getItem("tipo_sorteio");
-
     if (usuarioSalvo && tipoSalvo) {
       meuUsuario = usuarioSalvo;
       document.getElementById("telaLogin").classList.add("hidden");
-
       if (tipoSalvo === "organizador") {
         document.getElementById("telaOrganizador").classList.remove("hidden");
       } else {
@@ -122,21 +152,14 @@
     var u = document.getElementById("usuario").value;
     var s = document.getElementById("senha").value;
     if(!u || !s) { alert("Preencha todos os campos!"); return; }
-    
     document.getElementById("msgLogin").innerText = "Conectando ao Centro Pokémon...";
-    
     fetch(`${WEB_APP_URL}?action=login&usuario=${encodeURIComponent(u)}&senha=${encodeURIComponent(s)}`)
-      .then(response => response.json())
-      .then(res => {
+      .then(r => r.json()).then(res => {
         if(res.sucesso) {
           meuUsuario = res.nome;
-          
-          // 💾 SALVA O LOGIN NO NAVEGADOR
           localStorage.setItem("usuario_sorteio", meuUsuario);
           localStorage.setItem("tipo_sorteio", res.tipo);
-          
           document.getElementById("telaLogin").classList.add("hidden");
-          
           if(res.tipo === "organizador") {
             document.getElementById("telaOrganizador").classList.remove("hidden");
           } else {
@@ -145,78 +168,53 @@
             checarAtualizacoes();
             intervaloAtualizacao = setInterval(checarAtualizacoes, 5000);
           }
-        } else {
-          document.getElementById("msgLogin").innerText = res.mensagem;
-        }
-      })
-      .catch(err => {
-        document.getElementById("msgLogin").innerText = "Erro ao conectar com o servidor.";
-        console.error(err);
-      });
+        } else { document.getElementById("msgLogin").innerText = res.mensagem; }
+      }).catch(err => { document.getElementById("msgLogin").innerText = "Erro ao conectar."; });
   }
 
   function anunciarPremio() {
     var p = document.getElementById("inputPremio").value;
     if(!p) { alert("Insira o nome do brinde!"); return; }
-    
-    fetch(`${WEB_APP_URL}?action=anunciar&premio=${encodeURIComponent(p)}`)
-      .then(response => response.text())
-      .then(res => alert(res));
+    fetch(`${WEB_APP_URL}?action=anunciar&premio=${encodeURIComponent(p)}`).then(r => r.text()).then(res => alert(res));
   }
 
   function sortear() {
     document.getElementById("resultadoMestre").innerText = "Sorteando...";
-    
-    fetch(`${WEB_APP_URL}?action=sortear`)
-      .then(response => response.json())
-      .then(res => {
-        if(res.sucesso) {
-          document.getElementById("resultadoMestre").innerHTML = "Ganhador: " + res.ganhador + "<br><span style='font-size:14px;color:#333;'>Premio: "+res.premio+"</span>";
-        } else {
-          document.getElementById("resultadoMestre").innerText = res.mensagem;
-        }
-      });
+    fetch(`${WEB_APP_URL}?action=sortear`).then(r => r.json()).then(res => {
+      if(res.sucesso) {
+        document.getElementById("resultadoMestre").innerHTML = "Ganhador: " + res.ganhador + "<br><span style='font-size:14px;color:#333;'>Premio: "+res.premio+"</span>";
+      } else { document.getElementById("resultadoMestre").innerText = res.mensagem; }
+    });
   }
 
   function resetar() {
-    if(confirm("Tem certeza que deseja resetar toda a urna? Todos voltarão a concorrer!")) {
-      fetch(`${WEB_APP_URL}?action=resetar`)
-        .then(response => response.text())
-        .then(res => {
-          alert(res);
-          document.getElementById("resultadoMestre").innerText = "";
-        });
+    if(confirm("Deseja resetar a urna?")) {
+      fetch(`${WEB_APP_URL}?action=resetar`).then(r => r.text()).then(res => { alert(res); document.getElementById("resultadoMestre").innerText = ""; });
     }
   }
 
   var ultimoGanhadorConhecido = "";
   function checarAtualizacoes() {
-    fetch(`${WEB_APP_URL}?action=atualizar`)
-      .then(response => response.json())
-      .then(dados => {
-        document.getElementById("txtPremio").innerText = dados.premio ? dados.premio : "Aguardando próximo prêmio...";
-        
-        if (dados.ganhador) {
-          document.getElementById("animacaoPokebola").style.display = "none";
-          document.getElementById("txtGanhador").innerText = dados.ganhador + " ganhou o item: " + dados.premio + "!";
-          ultimoGanhadorConhecido = dados.ganhador;
+    fetch(`${WEB_APP_URL}?action=atualizar`).then(r => r.json()).then(dados => {
+      document.getElementById("txtPremio").innerText = dados.premio ? dados.premio : "Aguardando próximo prêmio...";
+      if (dados.ganhador) {
+        document.getElementById("animacaoPokebola").style.display = "none";
+        document.getElementById("txtGanhador").innerText = dados.ganhador + " ganhou o item: " + dados.premio + "!";
+        ultimoGanhadorConhecido = dados.ganhador;
+      } else {
+        if(dados.premio && ultimoGanhadorConhecido !== "") {
+          document.getElementById("animacaoPokebola").style.display = "block";
+          document.getElementById("txtGanhador").innerText = "Sorteando...";
         } else {
-          if(dados.premio && ultimoGanhadorConhecido !== "") {
-            document.getElementById("animacaoPokebola").style.display = "block";
-            document.getElementById("txtGanhador").innerText = "O Organizador iniciou a rodada! Sorteando...";
-          } else {
-            document.getElementById("animacaoPokebola").style.display = "none";
-            document.getElementById("txtGanhador").innerText = "Aguardando o clique do botão de sorteio!";
-          }
+          document.getElementById("animacaoPokebola").style.display = "none";
+          document.getElementById("txtGanhador").innerText = "Aguardando o sorteio!";
         }
-      });
+      }
+    });
   }
 
-  function fazerLogout() {
-    localStorage.clear();
-    location.reload();
-  }
-  
+  function fazerLogout() { localStorage.clear(); location.reload(); }
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
