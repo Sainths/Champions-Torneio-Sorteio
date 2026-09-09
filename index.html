@@ -98,6 +98,26 @@
   var meuUsuario = "";
   var intervaloAtualizacao;
 
+  // 🔄 VERIFICA SE JÁ EXISTE LOGIN SALVO AO ABRIR O APP
+  window.addEventListener("DOMContentLoaded", function() {
+    var usuarioSalvo = localStorage.getItem("usuario_sorteio");
+    var tipoSalvo = localStorage.getItem("tipo_sorteio");
+
+    if (usuarioSalvo && tipoSalvo) {
+      meuUsuario = usuarioSalvo;
+      document.getElementById("telaLogin").classList.add("hidden");
+
+      if (tipoSalvo === "organizador") {
+        document.getElementById("telaOrganizador").classList.remove("hidden");
+      } else {
+        document.getElementById("nomeTreinador").innerText = meuUsuario;
+        document.getElementById("telaParticipante").classList.remove("hidden");
+        checarAtualizacoes();
+        intervaloAtualizacao = setInterval(checarAtualizacoes, 5000);
+      }
+    }
+  });
+
   function fazerLogin() {
     var u = document.getElementById("usuario").value;
     var s = document.getElementById("senha").value;
@@ -105,12 +125,16 @@
     
     document.getElementById("msgLogin").innerText = "Conectando ao Centro Pokémon...";
     
-    // Conecta com a planilha via GitHub usando a URL informada
     fetch(`${WEB_APP_URL}?action=login&usuario=${encodeURIComponent(u)}&senha=${encodeURIComponent(s)}`)
       .then(response => response.json())
       .then(res => {
         if(res.sucesso) {
           meuUsuario = res.nome;
+          
+          // 💾 SALVA O LOGIN NO NAVEGADOR
+          localStorage.setItem("usuario_sorteio", meuUsuario);
+          localStorage.setItem("tipo_sorteio", res.tipo);
+          
           document.getElementById("telaLogin").classList.add("hidden");
           
           if(res.tipo === "organizador") {
@@ -131,7 +155,6 @@
       });
   }
 
-  // Funções do Organizador (Sainths / PokeManers)
   function anunciarPremio() {
     var p = document.getElementById("inputPremio").value;
     if(!p) { alert("Insira o nome do brinde!"); return; }
@@ -166,7 +189,6 @@
     }
   }
 
-  // Funções de Tempo Real do Participante
   var ultimoGanhadorConhecido = "";
   function checarAtualizacoes() {
     fetch(`${WEB_APP_URL}?action=atualizar`)
@@ -188,6 +210,11 @@
           }
         }
       });
+  }
+
+  function fazerLogout() {
+    localStorage.clear();
+    location.reload();
   }
   
 </script>
