@@ -1,503 +1,195 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Champions Tournament</title>
+  <base target="_top">
   <style>
-    :root {
-      --azul-arena: #0a2e5c;
-      --azul-neon: #00bfff;
-      --vermelho-liga: #ff1f1f;
-      --amarelo-campeao: #ffde00;
-      --fundo-escuro: #060e18;
-      --cinza-card: rgba(13, 27, 42, 0.9);
-    }
-    body {
-      background-color: var(--fundo-escuro);
-      color: white;
-      font-family: sans-serif;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-image: radial-gradient(circle, var(--azul-arena) 0%, var(--fundo-escuro) 85%);
-      min-height: 100vh;
-      padding: 15px;
-      box-sizing: border-box;
-    }
-    .container { 
-      width: 95%; max-width: 450px; margin: 30px auto; padding: 25px; 
-      border: 2px solid var(--azul-neon); border-radius: 15px; 
-      background: rgba(6, 14, 24, 0.95); box-shadow: 0 0 20px rgba(0, 191, 255, 0.4); 
-      text-align: center; box-sizing: border-box; 
-    }
-    #main-screen.container { max-width: 600px; }
-    h1 { color: var(--azul-neon); text-transform: uppercase; font-size: 1.4rem; } 
-    .tab-buttons { display: flex; background: var(--azul-arena); border-radius: 8px; overflow: hidden; margin-bottom: 25px; border: 1px solid var(--azul-neon); } 
-    .tab-btn { flex: 1; background: transparent; border: none; color: #aebac7; padding: 14px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; }
-    .tab-btn.active { background: var(--azul-neon); color: white; }
-    .input-group { margin: 15px 0; text-align: left; } 
-    label { display: block; color: #e5e9f0; margin-bottom: 5px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; } 
-    input { width: 100%; padding: 12px; background: #132237; border: 1px solid var(--azul-arena); color: white; border-radius: 5px; box-sizing: border-box; } 
-    .btn-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .btn-sub { padding: 14px; font-size: 0.75rem; font-weight: bold; color: white; border-radius: 5px; cursor: pointer; text-transform: uppercase; border: 1px solid var(--azul-neon); }
-    .fase-secao { text-align: left; margin-top: 25px; }
-    .fase-header { color: var(--amarelo-campeao); font-size: 0.85rem; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid rgba(0, 191, 255, 0.2); padding-bottom: 6px; margin-bottom: 10px; }
-    .card-duelo { background: var(--cinza-card); border: 1px solid var(--azul-arena); border-left: 4px solid var(--azul-neon); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
-    .linha-treinador { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; font-size: 0.85rem; }
-    .linha-treinador.winner { color: var(--amarelo-campeao); font-weight: bold; }
-    .btn-vitoria { background: #00cc88; border: none; color: white; padding: 6px 10px; font-size: 0.65rem; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-    .urna-box { background: rgba(2, 8, 19, 0.8); border: 2px dashed var(--azul-neon); padding: 20px; border-radius: 10px; margin-top: 15px; }
-    .hidden { display: none !important; }
-    .status-msg { margin-top: 15px; font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; }
+    :root { --poke-red: #ef5350; --poke-blue: #2a75d3; --poke-yellow: #ffcb05; --poke-dark: #333; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #eef2f3; display: flex; justify-content: center; }
+    .card { background: white; max-width: 450px; width: 100%; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; border: 4px solid var(--poke-dark); }
+    .header { background: var(--poke-red); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; text-shadow: 2px 2px var(--poke-dark); border-bottom: 8px solid var(--poke-dark); }
+    .content { padding: 20px; }
+    .campo { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--poke-dark); }
+    input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+    input:focus { border-color: var(--poke-blue); outline: none; }
+    button { background: var(--poke-yellow); color: var(--poke-dark); border: 2px solid var(--poke-dark); padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; text-transform: uppercase; box-shadow: 0 4px #bfa104; transition: 0.1s; }
+    button:active { box-shadow: 0 0px #bfa104; transform: translateY(4px); }
+    .btn-danger { background: var(--poke-red); color: white; box-shadow: 0 4px #9e2a2b; }
+    .btn-danger:active { box-shadow: 0 0px #9e2a2b; }
+    .painel-box { background: #fffde7; border: 3px dashed var(--poke-blue); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+    .resultado-sorteio { font-size: 20px; font-weight: bold; color: #d32f2f; margin-top: 10px; }
+    .hidden { display: none; }
+    .pokebola { width: 60px; height: 60px; background: white; border: 3px solid #333; border-radius: 50%; position: relative; margin: 15px auto; overflow: hidden; animation: shake 1.5s infinite ease-in-out; display: none; }
+    .pokebola::before { content: ''; position: absolute; background: red; width: 100%; height: 50%; top: 0; left: 0; border-bottom: 3px solid #333; }
+    .pokebola::after { content: ''; position: absolute; background: white; width: 16px; height: 16px; border: 3px solid #333; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
+    @keyframes shake { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(-15deg); } 40% { transform: rotate(15deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } }
   </style>
 </head>
 <body>
-<!-- TELA 1: LOGIN -->
-  <div id="auth-screen" class="container">
-    <img src="icone-sorteio.png" alt="Logo" style="width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--azul-neon); margin-bottom: 12px; background-color: var(--fundo-escuro); object-fit: cover;">
-    <h1>Champions Tournament</h1>
-    <div class="input-group">
-      <label>Nome do Treinador</label>
-      <input type="text" id="nome" placeholder="Ex: Ash">
-    </div>
-    <div class="input-group">
-      <label>Senha de Acesso</label>
-      <input type="password" id="senha" placeholder="****">
-    </div>
-    <div class="input-group">
-      <label>Seu Time (Link do Showdown / Pokepaste)</label>
-      <input type="text" id="deck-torneio" placeholder="Cole o link da sua Team Sheet aqui...">
-    </div>
-    <div class="btn-duo">
-      <button onclick="registrarInscricao('torneio')" class="btn-sub" style="background: linear-gradient(to bottom, #00bfff, #0a2e5c);">⚔️ VGC Torneio</button>
-      <button onclick="registrarInscricao('sorteio')" class="btn-sub" style="background: linear-gradient(to bottom, var(--amarelo-campeao), #b89200); color: black; font-weight: bold;">🎁 Urna Sorteio</button>
-    </div>
-    <p id="status-login" class="status-msg"></p>
-  </div>
 
-  <!-- TELA 2: DASHBOARD -->
-  <div id="main-screen" class="container hidden">
-    <p style="text-align: left; font-size: 0.85rem; margin-bottom: 15px; color: #88c0d0;">Treinador Ativo: <span id="user-display" style="color:var(--amarelo-campeao); font-weight: bold;">---</span></p>
-    <div class="tab-buttons">
-      <button class="tab-btn active" id="btn-aba-chaves" onclick="trocarAbaVisual('aba-chaveamento')">Chaves Mata-Mata</button>
-      <button class="tab-btn" id="btn-aba-premios" onclick="trocarAbaVisual('aba-premios')">Urna de Brindes</button>
-    </div>
-<div id="painel-admin" class="hidden" style="margin-bottom: 25px; padding: 15px; border: 1px dashed var(--vermelho-liga); border-radius: 10px; background: rgba(255, 31, 31, 0.03); text-align: left;">
-      <h3 style="color: var(--vermelho-liga); font-size: 0.85rem; margin: 0 0 12px 0; text-transform: uppercase;">⚙️ PAINEL DO ORGANIZADOR</h3>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-        <button onclick="gerarChaveamentoLocal()" style="background: #00cc88; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Embaralhar & Iniciar</button>
-        <button onclick="resetarTorneioLocal()" style="background: var(--vermelho-liga); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Resetar Torneio</button>
-      </div>
-      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-        <label style="font-size: 0.7rem; color: #aebac7;">Item Cadastrado:</label>
-        <input type="text" id="input-nome-premio" placeholder="Ex: Booster Pack..." style="padding: 8px; font-size: 0.8rem; margin-bottom: 8px;">
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button onclick="publicarPremioSemSortear()" style="background: var(--azul-neon); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">📢 Anunciar Prêmio</button>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button onclick="dispararSorteioBrinde()" style="background: var(--amarelo-campeao); color: black; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">🎰 Rolar Sorteio</button>
-            <button onclick="resetarDadosMaster('sorteio')" style="background: #4b5d6c; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">Limpar Urna</button>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="card">
+  <div class="header">
+  <img src="logo.png" alt="Logo Sorteio" style="max-width: 120px; width: 100%; height: auto; display: block; margin: 0 auto 10px auto;">
+  SORTEIO PÓKEMON
+</div>
 
-    <div id="aba-chaveamento" class="tab-content">
-      <div id="container-fases-arvore">
-        <p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando geração de chaves oficiais...</p>
-      </div>
-    </div>
-
-    <div id="aba-premios" class="tab-content hidden">
-      <div class="urna-box">
-        <div style="font-size: 1.1rem; color: var(--amarelo-campeao); font-weight: bold;">🎁 ITEM DA RODADA:</div>
-        <div id="display-brinde-alvo" style="color: var(--azul-neon); font-size: 1.1rem; font-weight: bold;">Nenhum item em disputa</div>
-        <hr style="border: 0; border-top: 1px solid rgba(0,191,255,0.1); margin: 15px 0;">
-        <div style="font-size: 0.75rem; color: #88c0d0; text-transform: uppercase;">🏆 Vencedor do Sorteio Eletrônico 🏆</div>
-        <div id="display-ganhador-sorteio" style="font-size: 1.6rem; color: #fff; font-weight: 900; margin: 15px 0;">???</div>
-      </div>
-    </div>
-    <button onclick="fazerLogout()" style="color:#64748b; background:none; border:none; margin-top:25px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Desconectar do Portal</button>
-  </div>
-
-<script>
-const URL_SISTEMA_CHAVAS = "https://script.google.com/macros/s/AKfycbydCvg69SCrNMgApSqjK7gVXXx_dXj2hPjnzXzK1Epo4FT9URZaiE6fPcoYR9qfd9ty/exec";
-let loopMonitoramento = null;
-let informacoesJogadorLogado = null;
-let timesMapeadosPorTreinador = {};
-let confrontosAtivos = [];
-function formatarColunaTimeComLink(textoTime) {
-  if (!textoTime || textoTime.trim() === "" || textoTime.trim() === "Aguardando..." || textoTime.trim() === "BYE") return "";
-  var textoLimpo = textoTime.toString().trim();
-  if (textoLimpo.startsWith("http://") || textoLimpo.startsWith("https://") || textoLimpo.includes("pokepaste") || textoLimpo.includes("showdown")) {
-    return `<a href="${textoLimpo}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: linear-gradient(to bottom, #00bfff, #0a2e5c); color: white; text-decoration: none; padding: 3px 6px; font-size: 0.6rem; font-weight: bold; border-radius: 3px; text-transform: uppercase; border: 1px solid #00bfff; margin-left: 6px; cursor: pointer;">📋 Lista</a>`;
-  }
-  return "";
-}
-
-window.onload = () => {
-  const sessaoSalva = localStorage.getItem('SessionTournament');
-  if (sessaoSalva) {
-    try {
-      informacoesJogadorLogado = JSON.parse(sessaoSalva);
-      liberarAmbientePrincipal(informacoesJogadorLogado);
-    } catch(e) { localStorage.removeItem('SessionTournament'); }
-  }
-};
-
-function trocarAbaVisual(idAbaAlvo) {
-  document.querySelectorAll('.tab-content').forEach(aba => aba.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  const abaAtiva = document.getElementById(idAbaAlvo);
-  if (abaAtiva) abaAtiva.classList.remove('hidden');
-  if(idAbaAlvo === 'aba-chaveamento') document.getElementById('btn-aba-chaves').classList.add('active');
-  if(idAbaAlvo === 'aba-premios') document.getElementById('btn-aba-premios').classList.add('active');
-}
-
-async function registrarInscricao(tipoAtividade) {
-  const nome = document.getElementById('nome').value.trim();
-  const senha = document.getElementById('senha').value;
-  const timeDigitado = document.getElementById('deck-torneio') ? document.getElementById('deck-torneio').value.trim() : "";
-  const statusElement = document.getElementById('status-login');
-  if (!nome || !senha) { alert("Preencha o Nome e a Senha!"); return; }
-  if (statusElement) statusElement.innerText = "Sincronizando com o Portal da Liga...";
-
-  // Correção de proteção: Se a URL ainda for o padrão do Google, simula sucesso para testes locais
-  if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-    informacoesJogadorLogado = { nome, senha };
-    localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
-    if (statusElement) statusElement.innerText = "Acesso validado (Modo Teste)!";
-    setTimeout(() => {
-      liberarAmbientePrincipal(informacoesJogadorLogado);
-      if(document.getElementById('deck-torneio')) document.getElementById('deck-torneio').value = "";
-    }, 1000);
-    return;
-  }
-
-  try {
-    const resposta = await fetch(URL_SISTEMA_CHAVAS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: "registrarParticipacao", nome: nome, senha: senha, deck: timeDigitado, escopo: tipoAtividade })
-    });
-    const dadosServidor = await resposta.json();
-    if (dadosServidor.status === "Sucesso" || dadosServidor.status === "LoginEfetuado") {
-      informacoesJogadorLogado = { nome, senha };
-      localStorage.setItem('SessionTournament', JSON.stringify(informacoesJogadorLogado));
-      if (statusElement) statusElement.innerText = "Acesso validado!";
-      setTimeout(() => {
-        liberarAmbientePrincipal(informacoesJogadorLogado);
-        if(document.getElementById('deck-torneio')) document.getElementById('deck-torneio').value = "";
-      }, 1000);
-    } else { if (statusElement) statusElement.innerText = dadosServidor.mensagem || "Falha nas credenciais."; }
-  } catch (erro) { if (statusElement) statusElement.innerText = "Erro na validação de rede."; }
-}
-function liberarAmbientePrincipal(dadosUsuario) {
-  if(!dadosUsuario || !dadosUsuario.nome) return;
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  document.getElementById('user-display').innerText = dadosUsuario.nome;
-  const nomeMinusculo = dadosUsuario.nome.toLowerCase();
-  if (nomeMinusculo === "sainths" || nomeMinusculo === "pokemaners") {
-    document.getElementById('painel-admin').classList.remove('hidden');
-  }
-  sincronizarDadosGeraisTorneio();
-  if (loopMonitoramento) clearInterval(loopMonitoramento);
-  loopMonitoramento = setInterval(sincronizarDadosGeraisTorneio, 8000);
-}
-
-async function sincronizarDadosGeraisTorneio() {
-  try {
-    // Proteção se for apenas a URL mock do Google
-    if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-      return; 
-    }
-    const resposta = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterStatusGeral`);
-    const payload = await resposta.json();
-    if (document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = payload.itemSorteio || "Aguardando...";
-    if (document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = payload.ganhadorSorteio || "???";
+  <div class="content">
     
-    if (payload.listaInscritosComTimes) {
-      timesMapeadosPorTreinador = {};
-      payload.listaInscritosComTimes.forEach(inf => {
-        if (inf.nome) timesMapeadosPorTreinador[inf.nome.toString().trim().toLowerCase()] = inf.time || "";
-      });
-    }
-    if (payload.chavesNuvem && payload.chavesNuvem.length > 0) {
-      confrontosAtivos = payload.chavesNuvem;
-      renderizarArvoreMataMataLocal();
-    } else {
-      confrontosAtivos = [];
-      const container = document.getElementById('container-fases-arvore');
-      if (container) container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`;
-    }
-  } catch (e) { console.warn("Aviso na sincronização."); }
-}
+    <!-- TELA DE LOGIN -->
+    <div id="telaLogin">
+      <h3>Bem-vindo, Treinador!</h3>
+      <p style="font-size: 14px; color: #666;">Digite um usuário e senha. Se você não tiver cadastro, ele será feito na hora!</p>
+      <div class="campo">
+        <label>Nome de Usuário:</label>
+        <input type="text" id="usuario" placeholder="Ex: AshKetchum">
+      </div>
+      <div class="campo">
+        <label>Senha:</label>
+        <input type="password" id="senha" placeholder="Sua senha">
+      </div>
+      <button onclick="fazerLogin()">Entrar / Registrar</button>
+      <p id="msgLogin" style="color: red; font-weight: bold; text-align: center; margin-top: 10px;"></p>
+    </div>
 
-async function gerarChaveamentoLocal() {
-  if (confirm("Deseja fechar as inscrições e gerar as chaves oficiais na nuvem?")) {
-    try {
-      let lista = [];
+    <!-- TELA DO PARTICIPANTE -->
+    <div id="telaParticipante" class="hidden">
+      <h3>Painel do Treinador: <span id="nomeTreinador" style="color:var(--poke-blue)"></span></h3>
+      <div class="painel-box">
+        <p><strong>🎁 PRÊMIO ATUAL:</strong></p>
+        <div id="txtPremio" style="font-size: 18px; color: var(--poke-dark);">Aguardando organizador...</div>
+      </div>
+      <div class="pokebola" id="animacaoPokebola"></div>
+      <div class="painel-box" id="boxGanhador">
+        <p><strong>🏆 GANHADOR DA RODADA:</strong></p>
+        <div id="txtGanhador" class="resultado-sorteio">Aguardando o sorteio iniciar!</div>
+      </div>
+      <p style="text-align: center; font-size: 12px; color: #777;">Os dados atualizam automaticamente a cada 5 segundos.</p>
+    </div>
 
-      // Se a URL for o Google, gera competidores fictícios para teste local
-      if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-        lista = ["Ash", "Gary", "Misty", "Brock", "Leon", "Cynthia", "Red", "Ethan"];
-      } else {
-        const resp = await fetch(`${URL_SISTEMA_CHAVAS}?action=obterListaInscritosReais`);
-        const payloadInscritos = await resp.json();
-        if (!payloadInscritos || !payloadInscritos.lista || payloadInscritos.lista.length === 0) {
-          alert("Nenhum competidor cadastrado na planilha ainda!"); return;
-        }
-        let listaRaw = Array.isArray(payloadInscritos.lista) ? payloadInscritos.lista : [payloadInscritos.lista];
-        lista = listaRaw.map(linha => linha ? linha.toString().trim() : "").filter(nome => nome !== "" && nome.toLowerCase() !== "nome");
-      }
-
-      if (lista.length < 2) { alert("Quantidade de competidores insuficiente!"); return; }
-
-      // Algoritmo de embaralhamento (Fisher-Yates)
-      for (let i = lista.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        let temp = lista[i]; lista[i] = lista[j]; lista[j] = temp;
-      }
-
-      let n = lista.length; let potencia = 2;
-      while (potencia < n) potencia *= 2;
-      let byesCount = potencia - n; let reaisCount = n - byesCount; let partidasCount = reaisCount / 2;
-      let jogamR1 = lista.slice(0, reaisCount); let ganhamBye = lista.slice(reaisCount);
-
-      confrontosAtivos = [];
-      let nomeFase1 = "Rodada Inicial";
-      if (potencia === 32) nomeFase1 = "Preliminar (Chave de 32)";
-      else if (potencia === 16) nomeFase1 = "Oitavas de Final";
-      else if (potencia === 8) nomeFase1 = "Quartas de Final";
-
-      for (let m = 0; m < partidasCount; m++) {
-        confrontosAtivos.push({ id: "F1-M" + (m + 1), fase: nomeFase1, j1: jogamR1[m * 2], j2: jogamR1[(m * 2) + 1], vencedor: "" });
-      }
-      for (let b = 0; b < ganhamBye.length; b++) {
-        confrontosAtivos.push({ id: "F1-B" + (b + 1), fase: nomeFase1, j1: ganhamBye[b], j2: "BYE", vencedor: ganhamBye[b] });
-      }
-
-      let vagasFaseSeguinte = potencia / 2; let numeroFaseContador = 2;
-      while (vagasFaseSeguinte >= 1) {
-        let nomeFaseLabel = "Fase " + numeroFaseContador;
-        if (vagasFaseSeguinte === 16) nomeFaseLabel = "Oitavas de Final";
-        if (vagasFaseSeguinte === 8) nomeFaseLabel = "Quartas de Final";
-        if (vagasFaseSeguinte === 4) nomeFaseLabel = "Semifinal"; // CORRIGIDO: 4 vagas restantes significam Semifinal (2 lutas)
-        if (vagasFaseSeguinte === 2) nomeFaseLabel = "Semifinal"; 
-        if (vagasFaseSeguinte === 1) nomeFaseLabel = "Grande Final";
-
-        for (let x = 0; x < vagasFaseSeguinte; x++) {
-          confrontosAtivos.push({ id: "F" + numeroFaseContador + "-M" + (x + 1), fase: nomeFaseLabel, j1: "Aguardando...", j2: "Aguardando...", vencedor: "" });
-        }
-        vagasFaseSeguinte = vagasFaseSeguinte / 2; numeroFaseContador++;
-      }
-
-      ganhamBye.forEach((jogador, b) => {
-        let fakeId = "F1-B" + (b + 1);
-        avançarJogadorNaArvoreLocal(fakeId, ...[jogador]); 
-      });
-
-      if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-        renderizarArvoreMataMataLocal();
-      } else {
-        await enviarChavesParaNuvem();
-      }
-    } catch(err) { alert("Erro ao gerar chaveamento."); }
-  }
-}
-function avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor) {
-  if (!idDuelo || !nomeVencedor) return;
-  // Captura os números do ID independentemente se ele usa "M" ou "B"
-  var numeros = idDuelo.match(/\d+/g);
-  if (!numeros || numeros.length < 2) return;
-
-  var faseAtual = parseInt(numeros[0]);
-  var numeroMatch = parseInt(numeros[1]);
-  if (isNaN(faseAtual) || isNaN(numeroMatch)) return;
-
-  var proximaFase = faseAtual + 1;
-  var proximoMatchIndex = Math.ceil(numeroMatch / 2);
-  var ehSlot1 = (numeroMatch % 2 !== 0);
-  var idAlvo = "F" + proximaFase + "-M" + proximoMatchIndex;
-  
-  var nomeLimpoFiltrado = nomeVencedor.toString().trim();
-
-  confrontosAtivos.forEach(match => {
-    if (match.id && match.id.toString().trim() === idAlvo) {
-      if (ehSlot1) { match.j1 = nomeLimpoFiltrado; } 
-      else { match.j2 = nomeLimpoFiltrado; }
+    <!-- TELA DO ORGANIZADOR (SAINTHS / POKEMANERS) -->
+    <div id="telaOrganizador" class="hidden">
+      <h3>Painel Mestre (Organizador)</h3>
       
-      if (match.j1 === "BYE" || match.j2 === "BYE") {
-        var proxVencedor = match.j1 === "BYE" ? match.j2 : match.j1;
-        if (proxVencedor !== "Aguardando...") {
-          match.vencedor = proxVencedor;
-          avançarJogadorNaArvoreLocal(idAlvo, proxVencedor);
-        }
-      }
-    }
-  });
-}
+      <div class="painel-box">
+        <label><strong>1. Definir Novo Prêmio:</strong></label>
+        <input type="text" id="inputPremio" placeholder="Ex: Booster Box, Pelúcia Pikachu" style="margin-bottom: 10px;">
+        <button onclick="anunciarPremio()">Anunciar Prêmio</button>
+      </div>
 
-async function reportarVitoriaDireta(idDuelo, nomeVencedor) {
-  if (!idDuelo || !nomeVencedor) return;
-  if (confirm("Confirma seu reporte de vitória no Set para " + nomeVencedor + "?")) {
-    confrontosAtivos.forEach(match => {
-      if (match.id === idDuelo) {
-        match.vencedor = nomeVencedor;
-        avançarJogadorNaArvoreLocal(idDuelo, nomeVencedor);
-      }
-    });
-    await enviarChavesParaNuvem();
-  }
-}
+      <div class="painel-box">
+        <label><strong>2. Rodar Urna:</strong></label>
+        <button onclick="sortear()" style="background-color: #28a745; color: white; border-color: #1e7e34; box-shadow: 0 4px #1e7e34;">Sortear Ganhador 🎲</button>
+        <div id="resultadoMestre" class="resultado-sorteio"></div>
+      </div>
 
-async function enviarChavesParaNuvem() {
-  renderizarArvoreMataMataLocal();
-  // Proteção para o ambiente de testes não estourar erro de rede no Google
-  if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-    console.log("Mock Nuvem: Chaves salvas localmente com sucesso.");
-    return;
-  }
-  try {
-    await fetch(URL_SISTEMA_CHAVAS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: JSON.stringify(confrontosAtivos) })
-    });
-  } catch (err) { console.error("Erro ao enviar chaves para nuvem", err); }
-}
-function renderizarArvoreMataMataLocal() {
-  var container = document.getElementById('container-fases-arvore');
-  if (!container) return;
-  container.innerHTML = "";
+      <div class="painel-box" style="border-color: var(--poke-red);">
+        <label><strong>Área de Perigo:</strong></label>
+        <button onclick="resetar()" class="btn-danger">Resetar Urna para Novo Dia</button>
+      </div>
+    </div>
 
-  if (!confrontosAtivos || confrontosAtivos.length === 0) {
-    container.innerHTML = `<p style="color:#64748b; font-size:0.8rem; padding: 20px;">Aguardando chaves oficiais...</p>`; return;
-  }
-
-  var nomeCampSupremo = "";
-  var ultimoMatch = confrontosAtivos[confrontosAtivos.length - 1];
-  if (ultimoMatch && ultimoMatch.fase === "Grande Final" && ultimoMatch.vencedor) {
-    nomeCampSupremo = ultimoMatch.vencedor;
-  }
-
-  var html = "";
-  if (nomeCampSupremo !== "" && nomeCampSupremo !== "BYE") {
-    html += `<div style="text-align: center;"><div class="urna-box" style="border: 2px solid var(--amarelo-campeao); background: rgba(255, 222, 0, 0.05); margin-bottom: 30px; animation: pulse 2s infinite;"><div style="font-size: 1.8rem;">👑🏆👑</div><div style="font-size: 0.85rem; color: var(--amarelo-campeao); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Grande Campeão da Liga</div><div style="font-size: 2rem; color: #fff; font-weight: 900; text-shadow: 0 0 20px var(--amarelo-campeao); margin: 10px 0;">${nomeCampSupremo}</div></div></div>`;
-  }
-
-  var agrupamento = {};
-  confrontosAtivos.forEach(m => {
-    if (m && m.fase) {
-      if (!agrupamento[m.fase]) agrupamento[m.fase] = [];
-      agrupamento[m.fase].push(m);
-    }
-  });
-
-  for (var fase in agrupamento) {
-    // CORREÇÃO: Garante que a fase não suma se houver algum competidor real avançando
-    var contemPartidaValida = agrupamento[fase].some(m => m.j1 !== "BYE" || m.j2 !== "BYE");
-    if (!contemPartidaValida) continue;
-
-    html += `<div class="fase-secao"><div class="fase-header">${fase}</div>`;
-    agrupamento[fase].forEach(match => {
-      // Exibe a partida mesmo se um dos lados for BYE para o chaveamento fazer sentido visualmente
-      var j1Puro = match.j1 ? match.j1.toString().trim() : "Aguardando...";
-      var j2Puro = match.j2 ? match.j2.toString().trim() : "Aguardando...";
-
-      var isW1 = match.vencedor && match.vencedor === j1Puro;
-      var isW2 = match.vencedor && match.vencedor === j2Puro;
-      
-      var nomeLogadoMinusculo = informacoesJogadorLogado ? informacoesJogadorLogado.nome.toLowerCase() : "";
-      var ehJuiz = nomeLogadoMinusculo === "sainths" || nomeLogadoMinusculo === "pokemaners";
-      var eDono1 = informacoesJogadorLogado && informacoesJogadorLogado.nome === j1Puro;
-      var eDono2 = informacoesJogadorLogado && informacoesJogadorLogado.nome === j2Puro;
-      var pronto = j1Puro !== "Aguardando..." && j2Puro !== "Aguardando..." && j1Puro !== "BYE" && j2Puro !== "BYE";
-
-      var t1 = timesMapeadosPorTreinador[j1Puro.toLowerCase()] || "";
-      var t2 = timesMapeadosPorTreinador[j2Puro.toLowerCase()] || "";
-
-      html += `
-        <div class="card-duelo" style="margin-bottom: 15px;">
-          <div class="duelistas-nomes" style="flex: 1;">
-            <div class="linha-treinador ${isW1 ? 'winner' : ''}">
-              <span style="display: flex; align-items: center;">🏃 ${j1Puro} ${isW1 ? '🏆' : ''} ${formatarColunaTimeComLink(t1)}</span>
-              ${(pronto && (ehJuiz || (eDono1 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j1Puro}')" class="btn-vitoria">Venceu</button>` : ""}
-            </div>
-            <div class="linha-treinador ${isW2 ? 'winner' : ''}" style="margin-top: 8px;">
-              <span style="display: flex; align-items: center;">🏃 ${j2Puro} ${isW2 ? '🏆' : ''} ${formatarColunaTimeComLink(t2)}</span>
-              ${(pronto && (ehJuiz || (eDono2 && !match.vencedor))) ? `<button onclick="reportarVitoriaDireta('${match.id}', '${j2Puro}')" class="btn-vitoria">Venceu</button>` : ""}
-            </div>
-          </div>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-  container.innerHTML = html;
-}
-
-async function publicarPremioSemSortear() {
-  var itemInput = document.getElementById('input-nome-premio').value.trim();
-  if (!itemInput) return;
+  </div>
+</div>
   
-  if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-    if(document.getElementById('display-brinde-alvo')) document.getElementById('display-brinde-alvo').innerText = itemInput;
-    alert("Prêmio anunciado (Modo Teste)!");
-    return;
-  }
-  try {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "anunciarBrindeFase", item: itemInput }) });
-    alert("Prêmio anunciado!");
-  } catch(e) { alert("Erro de comunicação."); }
-}
+<script>
+  // 🔴 COLE O SEU LINK DO GOOGLE APPS SCRIPT DENTRO DAS ASPAS ABAIXO:
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxaDlMKUEwzdp0b4RC55udGy5ngYYDAHqksUrq3Cx4jTUPtQmtLcL_zLyXYHfPz9O63ag/exec";
 
-async function dispararSorteioBrinde() {
-  var itemInput = document.getElementById('input-nome-premio').value.trim();
-  if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-    if(document.getElementById('display-ganhador-sorteio')) document.getElementById('display-ganhador-sorteio').innerText = "Ash Ketchum";
-    document.getElementById('input-nome-premio').value = "";
-    alert("Sorteio realizado (Modo Teste)!");
-    return;
-  }
-  try {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "sortearBrindeNaUrna", item: itemInput }) });
-    document.getElementById('input-nome-premio').value = "";
-  } catch(e) { alert("Erro ao sortear."); }
-}
+  var meuUsuario = "";
+  var intervaloAtualizacao;
 
-async function resetarDadosMaster(tipoReset) {
-  if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-    alert("Urna limpa (Modo Teste)!");
-    return;
+  function fazerLogin() {
+    var u = document.getElementById("usuario").value;
+    var s = document.getElementById("senha").value;
+    if(!u || !s) { alert("Preencha todos os campos!"); return; }
+    
+    document.getElementById("msgLogin").innerText = "Conectando ao Centro Pokémon...";
+    
+    // Conecta com a planilha via GitHub usando a URL informada
+    fetch(`${WEB_APP_URL}?action=login&usuario=${encodeURIComponent(u)}&senha=${encodeURIComponent(s)}`)
+      .then(response => response.json())
+      .then(res => {
+        if(res.sucesso) {
+          meuUsuario = res.nome;
+          document.getElementById("telaLogin").classList.add("hidden");
+          
+          if(res.tipo === "organizador") {
+            document.getElementById("telaOrganizador").classList.remove("hidden");
+          } else {
+            document.getElementById("nomeTreinador").innerText = meuUsuario;
+            document.getElementById("telaParticipante").classList.remove("hidden");
+            checarAtualizacoes();
+            intervaloAtualizacao = setInterval(checarAtualizacoes, 5000);
+          }
+        } else {
+          document.getElementById("msgLogin").innerText = res.mensagem;
+        }
+      })
+      .catch(err => {
+        document.getElementById("msgLogin").innerText = "Erro ao conectar com o servidor.";
+        console.error(err);
+      });
   }
-  try {
-    await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "resetMaster", escopo: tipoReset }) });
-    alert("Reset concluído!");
-  } catch(e) { alert("Erro ao resetar."); }
-}
 
-async function resetarTorneioLocal() {
-  if (confirm("Deseja apagar a árvore e reiniciar o campeonato sincronizado na nuvem?")) {
-    confrontosAtivos = [];
-    if (URL_SISTEMA_CHAVAS.includes("google.com")) {
-      renderizarArvoreMataMataLocal();
-      alert("Torneio resetado (Modo Teste)!");
-      return;
+  // Funções do Organizador (Sainths / PokeManers)
+  function anunciarPremio() {
+    var p = document.getElementById("inputPremio").value;
+    if(!p) { alert("Insira o nome do brinde!"); return; }
+    
+    fetch(`${WEB_APP_URL}?action=anunciar&premio=${encodeURIComponent(p)}`)
+      .then(response => response.text())
+      .then(res => alert(res));
+  }
+
+  function sortear() {
+    document.getElementById("resultadoMestre").innerText = "Sorteando...";
+    
+    fetch(`${WEB_APP_URL}?action=sortear`)
+      .then(response => response.json())
+      .then(res => {
+        if(res.sucesso) {
+          document.getElementById("resultadoMestre").innerHTML = "Ganhador: " + res.ganhador + "<br><span style='font-size:14px;color:#333;'>Premio: "+res.premio+"</span>";
+        } else {
+          document.getElementById("resultadoMestre").innerText = res.mensagem;
+        }
+      });
+  }
+
+  function resetar() {
+    if(confirm("Tem certeza que deseja resetar toda a urna? Todos voltarão a concorrer!")) {
+      fetch(`${WEB_APP_URL}?action=resetar`)
+        .then(response => response.text())
+        .then(res => {
+          alert(res);
+          document.getElementById("resultadoMestre").innerText = "";
+        });
     }
-    try {
-      await fetch(URL_SISTEMA_CHAVAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "salvarChavesNuvem", estrutura: "" }) });
-      sincronizarDadosGeraisTorneio();
-    } catch(e) { alert("Erro ao resetar chaves."); }
   }
-}
 
-function fazerLogout() { localStorage.removeItem('SessionTournament'); location.reload(); }
-
-var estiloPulse = document.createElement('style');
-estiloPulse.innerHTML = `@keyframes pulse { 0% { box-shadow: 0 0 15px rgba(255,222,0,0.4); } 50% { box-shadow: 0 0 25px rgba(255,222,0,0.7); } 100% { box-shadow: 0 0 15px rgba(255,222,0,0.4); } }`;
-document.head.appendChild(estiloPulse);
+  // Funções de Tempo Real do Participante
+  var ultimoGanhadorConhecido = "";
+  function checarAtualizacoes() {
+    fetch(`${WEB_APP_URL}?action=atualizar`)
+      .then(response => response.json())
+      .then(dados => {
+        document.getElementById("txtPremio").innerText = dados.premio ? dados.premio : "Aguardando próximo prêmio...";
+        
+        if (dados.ganhador) {
+          document.getElementById("animacaoPokebola").style.display = "none";
+          document.getElementById("txtGanhador").innerText = dados.ganhador + " ganhou o item: " + dados.premio + "!";
+          ultimoGanhadorConhecido = dados.ganhador;
+        } else {
+          if(dados.premio && ultimoGanhadorConhecido !== "") {
+            document.getElementById("animacaoPokebola").style.display = "block";
+            document.getElementById("txtGanhador").innerText = "O Organizador iniciou a rodada! Sorteando...";
+          } else {
+            document.getElementById("animacaoPokebola").style.display = "none";
+            document.getElementById("txtGanhador").innerText = "Aguardando o clique do botão de sorteio!";
+          }
+        }
+      });
+  }
+  
 </script>
 </body>
 </html>
